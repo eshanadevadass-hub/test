@@ -84,6 +84,17 @@
       </div>
       <p id="resultBlurb" class="hint" style="margin-top:14px;"></p>
 
+      <div class="result-summary" style="margin-top:18px;padding-top:18px;border-top:0.5px solid var(--line);">
+        <div class="base-swatch cvd-target" id="seasonSwatch"></div>
+        <div class="base-codes">
+          <div><b id="seasonLabel">—</b></div>
+          <div id="seasonTagline">—</div>
+        </div>
+      </div>
+      <p id="seasonBlurb" class="hint" style="margin-top:10px;margin-bottom:14px;"></p>
+      <div class="palette" id="seasonGrid"></div>
+      <div id="seasonExportRow"></div>
+
       <p class="section-title" style="margin-top:24px;">Colours that suit you</p>
       <p id="recommendedReason" class="hint" style="margin-top:0;margin-bottom:14px;"></p>
       <div class="palette" id="recommendedGrid"></div>
@@ -348,7 +359,78 @@ function analyzeSkin(){
   if(lab.L>=68) depth='light';
   else if(lab.L>=48) depth='medium';
   else depth='deep';
-  return {r,g,b,lab,undertone,depth};
+  const chroma = Math.sqrt(lab.a*lab.a + lab.b*lab.b);
+  return {r,g,b,lab,undertone,depth,diff,chroma};
+}
+
+/* ---- Seasonal colour analysis (Spring/Summer/Autumn/Winter) ----
+   The classic four-season framework sorts on two axes: temperature (warm/cool,
+   which we already estimate above) and clarity — whether colouring reads as
+   bright and clear or soft and muted. We approximate clarity with Lab chroma
+   (distance from grey) on the same skin sample. This is a simplification: a
+   full professional analysis also weighs hair and eye colour, which this scan
+   doesn't capture — treat the result as a starting point, not a verdict. */
+const SEASON_INFO = {
+  spring: {
+    name:'Spring', tagline:'Warm & clear',
+    blurb:'Warm undertone with a bright, clear quality rather than a dusty one — Spring palettes lean toward saturated, sunlit colours: warm coral, golden yellow, grass green, warm turquoise.',
+    hues:[16,45,90,175,5,55], sat:72, light:60
+  },
+  summer: {
+    name:'Summer', tagline:'Cool & soft',
+    blurb:'Cool undertone with a soft, muted quality rather than high contrast — Summer palettes lean toward gentle, dusty cool colours: powder blue, dusty rose, lavender, soft sage.',
+    hues:[210,340,270,150,200,320], sat:38, light:68
+  },
+  autumn: {
+    name:'Autumn', tagline:'Warm & muted',
+    blurb:'Warm undertone with a muted, earthy quality rather than brightness — Autumn palettes lean toward rich, warm neutrals: rust, olive, mustard, terracotta.',
+    hues:[20,38,80,14,42,8], sat:48, light:42
+  },
+  winter: {
+    name:'Winter', tagline:'Cool & clear',
+    blurb:'Cool undertone with a bright, high-contrast quality rather than a soft one — Winter palettes lean toward bold, saturated cool colours: true red, emerald, sapphire, icy blue.',
+    hues:[350,150,220,280,205,330], sat:80, light:38
+  }
+};
+
+function determineSeason(diff, chroma){
+  const warm = diff >= 0;
+  const clear = chroma >= 20;
+  if(warm) return clear ? 'spring' : 'autumn';
+  return clear ? 'winter' : 'summer';
+}
+
+function buildSeasonPalette(gridEl, season){
+  gridEl.innerHTML='';
+  const info = SEASON_INFO[season];
+  const shades = info.hues.map((h,i)=>({
+    h,
+    s: clamp(info.sat + (i%2===0?4:-4), 15, 92),
+    l: clamp(info.light + (i%3-1)*8, 18, 88)
+  }));
+  shades.forEach(sh=>{
+    const hex = hslToHex(sh.h,sh.s,sh.l);
+    const card = document.createElement('div');
+    card.className='swatch';
+    const colorDiv = document.createElement('div');
+    colorDiv.className='swatch-color cvd-target';
+    colorDiv.style.background=hex;
+    colorDiv.title = 'Click to explore this colour on the colour wheel';
+    colorDiv.addEventListener('click', ()=>{
+      const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
+      location.href = 'index.html#'+params.toString();
+    });
+    const info2 = document.createElement('div');
+    info2.className='swatch-info';
+    const hexLabel = document.createElement('p');
+    hexLabel.className='swatch-hex';
+    hexLabel.textContent = hex.toUpperCase();
+    info2.appendChild(hexLabel);
+    card.appendChild(colorDiv);
+    card.appendChild(info2);
+    gridEl.appendChild(card);
+  });
+  return shades;
 }
 
 const UNDERTONE_TEXT = {
@@ -616,6 +698,7 @@ document.querySelectorAll('#shadeCategoryPicker [data-category]').forEach(btn=>{
 });
 
 attachExportButtons('recommendedExportRow', 'recommendedGrid', 'colouristic-recommended-colours', 'Colours that suit you', 'My colours');
+attachExportButtons('seasonExportRow', 'seasonGrid', 'colouristic-season-palette', 'Colouristic season palette', 'My season palette');
 
 analyzeBtn.addEventListener('click', ()=>{
   const result = analyzeSkin();
@@ -628,6 +711,15 @@ analyzeBtn.addEventListener('click', ()=>{
   document.getElementById('undertoneLabel').textContent = result.undertone[0].toUpperCase()+result.undertone.slice(1)+' undertone';
   document.getElementById('depthLabel').textContent = DEPTH_TEXT[result.depth];
   document.getElementById('resultBlurb').textContent = UNDERTONE_TEXT[result.undertone] + ' This is a rough, lighting-dependent estimate — treat it as a starting point, not a verdict.';
+
+  const season = determineSeason(result.diff, result.chroma);
+  const seasonInfo = SEASON_INFO[season];
+  document.getElementById('seasonSwatch').style.background = hslToHex(seasonInfo.hues[0], seasonInfo.sat, seasonInfo.light);
+  document.getElementById('seasonLabel').textContent = seasonInfo.name;
+  document.getElementById('seasonTagline').textContent = seasonInfo.tagline;
+  document.getElementById('seasonBlurb').textContent = 'You read as a '+seasonInfo.name+' — '+seasonInfo.blurb+" Based on this scan's warmth and clarity reading alone; a full seasonal analysis traditionally also weighs hair and eye colour.";
+  buildSeasonPalette(document.getElementById('seasonGrid'), season);
+
   document.getElementById('recommendedReason').textContent = REASON_TEXT[result.undertone];
   buildFacePalette(document.getElementById('recommendedGrid'), RECOMMENDED_HUES[result.undertone], result.undertone, result.depth, false);
   buildFacePalette(document.getElementById('cautionGrid'), CAUTION_HUES[result.undertone], result.undertone, result.depth, true);
