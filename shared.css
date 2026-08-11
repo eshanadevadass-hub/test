@@ -306,11 +306,21 @@ input[type=range]::-moz-range-thumb{
 
 /* Texture-aware swatches: an optional overlay so a colour reads as a material —
    fabric weave or paint grain — instead of a flat digital square. Weave structures
-   (plain weave's crosshatch, twill's diagonal ribs) follow
+   (plain weave's over/under crossing, twill's diagonal ribs) follow
    hawthornintl.com/fabric-guide's descriptions; satin's sheen and the paint grain
-   are their own distinct, non-woven textures. Off by default; toggled via the
-   Texture selector, which composes with everything else since it only touches
-   background-image/blend-mode, never the swatch's underlying colour. */
+   are their own distinct, non-woven textures.
+
+   Each texture is built as a mid-grey ("rgb(128,128,128)") bump map — lighter
+   areas are raised, darker areas are recessed — and painted with
+   mix-blend-mode:overlay. Overlay lets a bump map both lighten AND darken the
+   colour underneath depending on the swatch's own tone, which is what actually
+   reads as woven/embossed material; a single semi-transparent colour laid on top
+   (the old approach) can only ever darken, which is why it read as flat lines
+   printed on the colour rather than a texture in the colour.
+
+   Off by default; toggled via the Texture selector, which composes with the
+   CVD/lighting/grayscale previews since it only touches background-image and
+   blend-mode, never the swatch's underlying colour value. */
 .swatch-color::after,
 .base-swatch::after{
   content:'';
@@ -319,38 +329,48 @@ input[type=range]::-moz-range-thumb{
   pointer-events:none;
   border-radius:inherit;
   background-repeat:repeat;
+  background-color: rgb(128,128,128);
+  mix-blend-mode: overlay;
   opacity:0;
 }
 html.texture-plain .swatch-color::after,
 html.texture-plain .base-swatch::after{
-  background-image:
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0 1px, transparent 1px 5px),
-    repeating-linear-gradient(90deg, rgba(0,0,0,0.5) 0 1px, transparent 1px 5px);
-  background-size: 5px 5px;
-  mix-blend-mode: multiply;
-  opacity: 0.35;
+  /* Plain weave: threads crossing over/under in a checkerboard, the way an actual
+     over-one-under-one weave reads at a glance (gingham, chambray, calico). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Crect width='8' height='8' fill='rgb(128,128,128)'/%3E%3Crect width='4' height='4' fill='rgb(190,190,190)'/%3E%3Crect x='4' y='4' width='4' height='4' fill='rgb(190,190,190)'/%3E%3Crect x='4' width='4' height='4' fill='rgb(55,55,55)'/%3E%3Crect y='4' width='4' height='4' fill='rgb(55,55,55)'/%3E%3C/svg%3E");
+  background-size: 7px 7px;
+  opacity: 0.95;
 }
 html.texture-twill .swatch-color::after,
 html.texture-twill .base-swatch::after{
-  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.55) 0 2px, transparent 2px 7px);
-  background-size: 10px 10px;
-  mix-blend-mode: multiply;
-  opacity: 0.35;
+  /* Twill: each diagonal rib gets its own highlight and shadow edge, so the
+     ribs read as raised cords (denim) rather than flat printed stripes. */
+  background-image: repeating-linear-gradient(45deg,
+    rgb(200,200,200) 0px, rgb(200,200,200) 2px,
+    rgb(128,128,128) 2px, rgb(128,128,128) 4px,
+    rgb(45,45,45) 4px, rgb(45,45,45) 6px,
+    rgb(128,128,128) 6px, rgb(128,128,128) 8px);
+  background-size: 11px 11px;
+  opacity: 0.95;
 }
 html.texture-satin .swatch-color::after,
 html.texture-satin .base-swatch::after{
-  background-image: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 45%, transparent 70%);
-  background-size: 220% 220%;
+  /* Satin: floated threads hide the weave and leave a broad lustrous sheen
+     instead — a bright band flanked by a soft shadow on either side. */
+  background-image: linear-gradient(120deg,
+    rgb(40,40,40) 0%, rgb(128,128,128) 26%,
+    rgb(250,250,250) 48%, rgb(128,128,128) 70%, rgb(40,40,40) 100%);
+  background-size: 260% 260%;
   background-position: 0 0;
-  mix-blend-mode: soft-light;
-  opacity: 0.8;
+  opacity: 0.95;
 }
 html.texture-paint .swatch-color::after,
 html.texture-paint .base-swatch::after{
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' /%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Paint / canvas grain: full-opacity greyscale turbulence noise, so the grain
+     shows everywhere instead of only where an alpha channel happened to be set. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 90px 90px;
-  mix-blend-mode: overlay;
-  opacity: 0.5;
+  opacity: 0.85;
 }
 
 .lock-toggle{
