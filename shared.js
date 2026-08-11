@@ -161,6 +161,27 @@ function initLightingControl(){
   });
 }
 
+const TEXTURE_STORAGE_KEY = 'colouristic.texturePreview.v1';
+const TEXTURE_CLASSES = ['texture-plain','texture-twill','texture-satin','texture-paint'];
+
+function applyTextureMode(mode){
+  document.documentElement.classList.remove(...TEXTURE_CLASSES);
+  if(mode!=='none') document.documentElement.classList.add('texture-'+mode);
+}
+function initTextureControl(){
+  const sel = document.getElementById('textureSelect');
+  if(!sel) return;
+  let saved = 'none';
+  try{ saved = localStorage.getItem(TEXTURE_STORAGE_KEY) || 'none'; }catch(e){}
+  sel.value = saved;
+  applyTextureMode(saved);
+  sel.addEventListener('change', e=>{
+    const mode = e.target.value;
+    applyTextureMode(mode);
+    try{ localStorage.setItem(TEXTURE_STORAGE_KEY, mode); }catch(e){}
+  });
+}
+
 function asciiSafe(str){
   return String(str).replace(/[^\x20-\x7E]/g, '');
 }
@@ -476,3 +497,4 @@ injectCvdFilters();
 initCvdControl();
 initGrayscaleControl();
 initLightingControl();
+initTextureControl();

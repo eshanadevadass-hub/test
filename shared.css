@@ -201,6 +201,8 @@ input[type=range]::-moz-range-thumb{
   border:0.5px solid var(--line-strong);
   box-shadow:0 0 20px -4px var(--live-color);
   flex-shrink:0;
+  position:relative;
+  overflow:hidden;
   transition:box-shadow .2s ease;
 }
 .base-codes{font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.5;color:var(--text-dim);}
@@ -301,6 +303,56 @@ input[type=range]::-moz-range-thumb{
   transition:filter .15s ease;
 }
 .swatch-color:hover{filter:brightness(1.06);}
+
+/* Texture-aware swatches: an optional overlay so a colour reads as a material —
+   fabric weave or paint grain — instead of a flat digital square. Weave structures
+   (plain weave's crosshatch, twill's diagonal ribs) follow
+   hawthornintl.com/fabric-guide's descriptions; satin's sheen and the paint grain
+   are their own distinct, non-woven textures. Off by default; toggled via the
+   Texture selector, which composes with everything else since it only touches
+   background-image/blend-mode, never the swatch's underlying colour. */
+.swatch-color::after,
+.base-swatch::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background-repeat:repeat;
+  opacity:0;
+}
+html.texture-plain .swatch-color::after,
+html.texture-plain .base-swatch::after{
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,0.5) 0 1px, transparent 1px 5px);
+  background-size: 5px 5px;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+}
+html.texture-twill .swatch-color::after,
+html.texture-twill .base-swatch::after{
+  background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.55) 0 2px, transparent 2px 7px);
+  background-size: 10px 10px;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+}
+html.texture-satin .swatch-color::after,
+html.texture-satin .base-swatch::after{
+  background-image: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 45%, transparent 70%);
+  background-size: 220% 220%;
+  background-position: 0 0;
+  mix-blend-mode: soft-light;
+  opacity: 0.8;
+}
+html.texture-paint .swatch-color::after,
+html.texture-paint .base-swatch::after{
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' /%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 90px 90px;
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
 .lock-toggle{
   position:absolute;top:8px;right:8px;
   width:26px;height:26px;border-radius:7px;
