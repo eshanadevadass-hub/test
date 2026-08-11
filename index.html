@@ -149,7 +149,7 @@ const size = 280;
 const center = size/2;
 const radius = center - 4;
 
-function drawWheel(){
+function drawWheel(lightness){
   const imgData = ctx.createImageData(size,size);
   for(let y=0;y<size;y++){
     for(let x=0;x<size;x++){
@@ -160,7 +160,7 @@ function drawWheel(){
         let angle = Math.atan2(dy,dx)*180/Math.PI;
         angle = (angle+90+360)%360;
         const sat = Math.min(dist/radius,1)*100;
-        const [r,g,b] = hslToRgb(angle,sat,55);
+        const [r,g,b] = hslToRgb(angle,sat,lightness);
         imgData.data[idx]=r; imgData.data[idx+1]=g; imgData.data[idx+2]=b;
         const edge = radius-dist;
         imgData.data[idx+3] = edge<1.5 ? Math.max(0,edge/1.5)*255 : 255;
@@ -172,9 +172,9 @@ function drawWheel(){
   ctx.putImageData(imgData,0,0);
 }
 
-drawWheel();
-
 let base = {h:265, s:55, l:55};
+
+drawWheel(base.l);
 
 const marker = document.getElementById('marker');
 const lightSlider = document.getElementById('lightSlider');
@@ -295,6 +295,7 @@ function restoreState(){
 }
 
 function onBaseChanged(){
+  drawWheel(base.l);
   updateMarker();
   updateBaseReadout();
   scheduleStateSync();
@@ -508,6 +509,7 @@ document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
 });
 
 restoreState();
+drawWheel(base.l);
 updateMarker();
 updateBaseReadout();
 </script>
