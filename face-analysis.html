@@ -465,27 +465,30 @@ const DEPTH_L = {light:68, medium:54, deep:38};
 const SAT_BY_UNDERTONE = {warm:68, cool:60, neutral:50};
 
 /* Blush shade families by depth x undertone, sourced from L'Oréal Paris's skin-tone
-   blush guide (beauty-magazine/makeup/face-makeup/blush-for-your-skintone): fair
-   skin wants a light, sheer flush; medium wants more pigment (apricot/mauve/berry);
-   deep needs real depth and saturation (wine, plum, rich purple) to read at all
-   instead of washing out chalky. "Fair" below covers our light depth tier, and the
-   article's separate "Olive" guidance is folded into medium/neutral, since olive is
-   usually described as a medium-depth, warm-neutral undertone. */
+   blush guide (beauty-magazine/makeup/face-makeup/blush-for-your-skintone). Each
+   combo carries 3 options, not just one: the depth tier's own named shade(s), plus
+   a second option pulled from the article's parallel "Olive" guidance for that same
+   undertone (olive sits in the light-to-medium depth range, so it fills out light
+   and medium here), plus a third bold/expressive option — either the article's own
+   callouts ("adventurous" coral for fair skin, peach as its "universal" pick) or,
+   for deep tones with no olive analogue, a same-family variant with more saturation.
+   Deep/neutral blends the depth's own warm and cool picks, matching how the article
+   describes neutral undertone generally: a mix of both rather than a single lane. */
 const BLUSH_SHADES = {
   light: {
-    warm:    [{h:26,  s:60, l:80, label:'Light peach'},   {h:12,  s:75, l:68, label:'Coral (bold pick)'}],
-    cool:    [{h:350, s:45, l:82, label:'Baby pink'},     {h:346, s:58, l:76, label:'Carnation'}],
-    neutral: [{h:350, s:40, l:78, label:'Soft rose'},     {h:12,  s:75, l:68, label:'Coral (bold pick)'}]
+    warm:    [{h:26,  s:60, l:80, label:'Light peach'},          {h:14,  s:68, l:74, label:'Peachy-pink'},        {h:12,  s:75, l:68, label:'Coral (bold pick)'}],
+    cool:    [{h:350, s:45, l:82, label:'Baby pink'},            {h:346, s:58, l:76, label:'Carnation'},          {h:340, s:70, l:68, label:'Vibrant pink (bold pick)'}],
+    neutral: [{h:350, s:40, l:78, label:'Soft rose'},            {h:26,  s:55, l:76, label:'Peach (universal)'},  {h:12,  s:75, l:68, label:'Coral (bold pick)'}]
   },
   medium: {
-    warm:    [{h:30,  s:65, l:62, label:'Apricot'},       {h:16,  s:55, l:50, label:'Light terracotta'}],
-    cool:    [{h:330, s:32, l:52, label:'Mauve'},         {h:345, s:60, l:42, label:'Berry'}],
-    neutral: [{h:26,  s:58, l:60, label:'Peach'},         {h:340, s:40, l:52, label:'Rosy-earthy pink'}]
+    warm:    [{h:30,  s:65, l:62, label:'Apricot'},              {h:16,  s:55, l:50, label:'Light terracotta'},   {h:15,  s:60, l:56, label:'Gold-pink'}],
+    cool:    [{h:330, s:32, l:52, label:'Mauve'},                {h:345, s:60, l:42, label:'Berry'},              {h:340, s:68, l:48, label:'Vibrant pink (bold pick)'}],
+    neutral: [{h:26,  s:58, l:60, label:'Peach (universal)'},    {h:340, s:40, l:52, label:'Rosy-earthy pink'},   {h:14,  s:60, l:56, label:'Soft coral'}]
   },
   deep: {
-    warm:    [{h:352, s:65, l:26, label:'Wine'},          {h:310, s:45, l:28, label:'Spiced plum'}],
-    cool:    [{h:290, s:55, l:32, label:'Rich purple'},   {h:335, s:55, l:28, label:'Berry (blue-toned)'}],
-    neutral: [{h:350, s:50, l:34, label:'Rose (shimmer finish)'}]
+    warm:    [{h:352, s:65, l:26, label:'Wine'},                 {h:310, s:45, l:28, label:'Spiced plum'},        {h:18,  s:60, l:34, label:'Deep terracotta (bold pick)'}],
+    cool:    [{h:290, s:55, l:32, label:'Rich purple'},          {h:335, s:55, l:28, label:'Berry (blue-toned)'}, {h:320, s:65, l:30, label:'Deep magenta (bold pick)'}],
+    neutral: [{h:350, s:50, l:34, label:'Rose (shimmer finish)'},{h:352, s:60, l:28, label:'Wine'},               {h:290, s:50, l:32, label:'Rich purple'}]
   }
 };
 
