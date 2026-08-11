@@ -165,9 +165,9 @@ const moodColourSwatch = document.getElementById('moodColourSwatch');
 const moodColourHex = document.getElementById('moodColourHex');
 const moodColourDesc = document.getElementById('moodColourDesc');
 
-paintStaticWheel(moodWheelCtx, moodWheelSize);
-
 let moodColour = {h:265, s:55, l:55};
+
+paintStaticWheel(moodWheelCtx, moodWheelSize, moodColour.l);
 
 function describeColourMood(h,s,l){
   let base;
@@ -208,6 +208,7 @@ function updateMoodColourReadout(){
   moodWheelLightSlider.value = Math.round(moodColour.l);
   moodWheelLightVal.textContent = Math.round(moodColour.l)+'%';
   moodColourDesc.textContent = describeColourMood(moodColour.h, moodColour.s, moodColour.l);
+  paintStaticWheel(moodWheelCtx, moodWheelSize, moodColour.l);
   updateMoodWheelMarker();
 }
 
@@ -254,11 +255,11 @@ const baseWheelMarker = document.getElementById('baseWheelMarker');
 const baseWheelLightSlider = document.getElementById('baseWheelLightSlider');
 const baseWheelLightVal = document.getElementById('baseWheelLightVal');
 
-paintStaticWheel(baseWheelCtx, baseWheelSize);
-
 let baseSlots = [null, null, null];
 let activeSlot = 0;
 let baseWheelColour = {h:265, s:55, l:55};
+
+paintStaticWheel(baseWheelCtx, baseWheelSize, baseWheelColour.l);
 
 function renderSlots(){
   document.querySelectorAll('#baseSlots button').forEach((btn,i)=>{
@@ -323,6 +324,7 @@ baseWheelCanvas.addEventListener('keydown', e=>{
 baseWheelLightSlider.addEventListener('input', e=>{
   baseWheelColour.l = parseFloat(e.target.value);
   baseWheelLightVal.textContent = Math.round(baseWheelColour.l)+'%';
+  paintStaticWheel(baseWheelCtx, baseWheelSize, baseWheelColour.l);
   commitActiveSlot();
 });
 
@@ -335,6 +337,7 @@ document.querySelectorAll('#baseSlots button').forEach((btn,i)=>{
       updateBaseWheelMarker();
       baseWheelLightSlider.value = Math.round(c.l);
       baseWheelLightVal.textContent = Math.round(c.l)+'%';
+      paintStaticWheel(baseWheelCtx, baseWheelSize, baseWheelColour.l);
     }
     renderSlots();
   });

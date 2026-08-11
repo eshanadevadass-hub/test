@@ -129,7 +129,7 @@ function restoreGameState(){
   document.getElementById('gameRoundVal').textContent = gameRounds;
 }
 
-paintStaticWheel(gameCtx, gameSize);
+paintStaticWheel(gameCtx, gameSize, gameGuess.l);
 
 function updateGameMarker(){
   const angle = (gameGuess.h-90)*Math.PI/180;
@@ -171,6 +171,7 @@ gameCanvas.addEventListener('keydown', e=>{
 gameLightSlider.addEventListener('input', e=>{
   gameGuess.l = parseFloat(e.target.value);
   gameLightVal.textContent = Math.round(gameGuess.l)+'%';
+  paintStaticWheel(gameCtx, gameSize, gameGuess.l);
 });
 
 document.querySelectorAll('.game-tab').forEach(btn=>{
@@ -192,6 +193,7 @@ function startNewRound(){
     gameGuess = {h:0, s:0, l:55};
     gameLightSlider.value = 55;
     gameLightVal.textContent = '55%';
+    paintStaticWheel(gameCtx, gameSize, gameGuess.l);
     updateGameMarker();
   } else {
     hexTargetSwatch.style.background = hslToHex(gameTarget.h, gameTarget.s, gameTarget.l);
