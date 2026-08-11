@@ -108,6 +108,7 @@
       <p class="hint" style="margin-top:0;margin-bottom:14px;">Matched to the same undertone and depth as your colour palette above — a starting point, not a rule, since finish, formula, and lighting all shift how a shade actually wears.</p>
 
       <p class="section-title" style="margin-top:18px;font-size:10px;">Blush</p>
+      <p id="blushNote" class="hint" style="margin-top:0;margin-bottom:10px;"></p>
       <div class="palette" id="blushGrid"></div>
 
       <p class="section-title" style="margin-top:18px;font-size:10px;">Eye shadow</p>
@@ -457,17 +458,36 @@ const CAUTION_HUES = {
   neutral: [55,205]
 };
 const MAKEUP_HUES = {
-  blush: { warm:[18,8,28], cool:[340,352,325], neutral:[355,12,345] },
   eyeshadow: { warm:[30,42,75,20], cool:[280,300,255,220], neutral:[25,270,35,0] },
   lipstick: { warm:[10,20,4], cool:[355,330,300], neutral:[358,12,350] }
 };
 const DEPTH_L = {light:68, medium:54, deep:38};
 const SAT_BY_UNDERTONE = {warm:68, cool:60, neutral:50};
-/* Blush needs to track skin depth, not sit at one flat lightness for everyone —
-   a pale pastel pink reads as chalky on deep skin and needs real pigment to show
-   up at all, while fair skin only needs a soft lift. */
-const BLUSH_L_OFFSET = {light:2, medium:0, deep:-10};
-const BLUSH_SAT_OFFSET = {light:-5, medium:5, deep:15};
+
+/* Blush shade families by depth x undertone, sourced from L'Oréal Paris's skin-tone
+   blush guide (beauty-magazine/makeup/face-makeup/blush-for-your-skintone): fair
+   skin wants a light, sheer flush; medium wants more pigment (apricot/mauve/berry);
+   deep needs real depth and saturation (wine, plum, rich purple) to read at all
+   instead of washing out chalky. "Fair" below covers our light depth tier, and the
+   article's separate "Olive" guidance is folded into medium/neutral, since olive is
+   usually described as a medium-depth, warm-neutral undertone. */
+const BLUSH_SHADES = {
+  light: {
+    warm:    [{h:26,  s:60, l:80, label:'Light peach'},   {h:12,  s:75, l:68, label:'Coral (bold pick)'}],
+    cool:    [{h:350, s:45, l:82, label:'Baby pink'},     {h:346, s:58, l:76, label:'Carnation'}],
+    neutral: [{h:350, s:40, l:78, label:'Soft rose'},     {h:12,  s:75, l:68, label:'Coral (bold pick)'}]
+  },
+  medium: {
+    warm:    [{h:30,  s:65, l:62, label:'Apricot'},       {h:16,  s:55, l:50, label:'Light terracotta'}],
+    cool:    [{h:330, s:32, l:52, label:'Mauve'},         {h:345, s:60, l:42, label:'Berry'}],
+    neutral: [{h:26,  s:58, l:60, label:'Peach'},         {h:340, s:40, l:52, label:'Rosy-earthy pink'}]
+  },
+  deep: {
+    warm:    [{h:352, s:65, l:26, label:'Wine'},          {h:310, s:45, l:28, label:'Spiced plum'}],
+    cool:    [{h:290, s:55, l:32, label:'Rich purple'},   {h:335, s:55, l:28, label:'Berry (blue-toned)'}],
+    neutral: [{h:350, s:50, l:34, label:'Rose (shimmer finish)'}]
+  }
+};
 
 function buildFacePalette(gridEl, hues, undertone, depth, cautious, opts={}){
   gridEl.innerHTML='';
@@ -728,7 +748,9 @@ analyzeBtn.addEventListener('click', ()=>{
   document.getElementById('recommendedReason').textContent = REASON_TEXT[result.undertone];
   buildFacePalette(document.getElementById('recommendedGrid'), RECOMMENDED_HUES[result.undertone], result.undertone, result.depth, false);
   buildFacePalette(document.getElementById('cautionGrid'), CAUTION_HUES[result.undertone], result.undertone, result.depth, true);
-  lastShadeSets.blush = buildFacePalette(document.getElementById('blushGrid'), MAKEUP_HUES.blush[result.undertone], result.undertone, result.depth, false, {lOffset:BLUSH_L_OFFSET[result.depth], satOffset:BLUSH_SAT_OFFSET[result.depth]});
+  lastShadeSets.blush = BLUSH_SHADES[result.depth][result.undertone];
+  document.getElementById('blushNote').textContent = 'Shade family for your depth and undertone: '+lastShadeSets.blush.map(sh=>sh.label).join(' or ')+'.';
+  buildShadeGrid(document.getElementById('blushGrid'), lastShadeSets.blush);
   lastShadeSets.eyeshadow = buildFacePalette(document.getElementById('eyeshadowGrid'), MAKEUP_HUES.eyeshadow[result.undertone], result.undertone, result.depth, false, {lOffset:-2, satOffset:-22});
   lastShadeSets.lipstick = buildFacePalette(document.getElementById('lipstickGrid'), MAKEUP_HUES.lipstick[result.undertone], result.undertone, result.depth, false, {lOffset:-8, satOffset:16});
   document.getElementById('shadeCategoryPicker').style.display = 'none';
