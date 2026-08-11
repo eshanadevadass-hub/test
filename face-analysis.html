@@ -463,6 +463,11 @@ const MAKEUP_HUES = {
 };
 const DEPTH_L = {light:68, medium:54, deep:38};
 const SAT_BY_UNDERTONE = {warm:68, cool:60, neutral:50};
+/* Blush needs to track skin depth, not sit at one flat lightness for everyone —
+   a pale pastel pink reads as chalky on deep skin and needs real pigment to show
+   up at all, while fair skin only needs a soft lift. */
+const BLUSH_L_OFFSET = {light:2, medium:0, deep:-10};
+const BLUSH_SAT_OFFSET = {light:-5, medium:5, deep:15};
 
 function buildFacePalette(gridEl, hues, undertone, depth, cautious, opts={}){
   gridEl.innerHTML='';
@@ -723,7 +728,7 @@ analyzeBtn.addEventListener('click', ()=>{
   document.getElementById('recommendedReason').textContent = REASON_TEXT[result.undertone];
   buildFacePalette(document.getElementById('recommendedGrid'), RECOMMENDED_HUES[result.undertone], result.undertone, result.depth, false);
   buildFacePalette(document.getElementById('cautionGrid'), CAUTION_HUES[result.undertone], result.undertone, result.depth, true);
-  lastShadeSets.blush = buildFacePalette(document.getElementById('blushGrid'), MAKEUP_HUES.blush[result.undertone], result.undertone, result.depth, false, {lOffset:16, satOffset:-15});
+  lastShadeSets.blush = buildFacePalette(document.getElementById('blushGrid'), MAKEUP_HUES.blush[result.undertone], result.undertone, result.depth, false, {lOffset:BLUSH_L_OFFSET[result.depth], satOffset:BLUSH_SAT_OFFSET[result.depth]});
   lastShadeSets.eyeshadow = buildFacePalette(document.getElementById('eyeshadowGrid'), MAKEUP_HUES.eyeshadow[result.undertone], result.undertone, result.depth, false, {lOffset:-2, satOffset:-22});
   lastShadeSets.lipstick = buildFacePalette(document.getElementById('lipstickGrid'), MAKEUP_HUES.lipstick[result.undertone], result.undertone, result.depth, false, {lOffset:-8, satOffset:16});
   document.getElementById('shadeCategoryPicker').style.display = 'none';
