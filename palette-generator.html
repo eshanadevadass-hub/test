@@ -128,7 +128,7 @@ const miniMarker = document.getElementById('miniMarker');
 const miniLightSlider = document.getElementById('miniLightSlider');
 const miniLightVal = document.getElementById('miniLightVal');
 
-paintStaticWheel(miniCtx, miniSize);
+paintStaticWheel(miniCtx, miniSize, base.l);
 
 function updateMiniMarker(){
   const rad = (base.h-90)*Math.PI/180;
@@ -187,6 +187,7 @@ function updateBaseReadout(){
   wheelLink.href = 'index.html#'+new URLSearchParams({h:base.h.toFixed(1), s:base.s.toFixed(1), l:base.l.toFixed(1)}).toString();
   miniLightSlider.value = Math.round(base.l);
   miniLightVal.textContent = Math.round(base.l)+'%';
+  paintStaticWheel(miniCtx, miniSize, base.l);
   updateMiniMarker();
 }
 

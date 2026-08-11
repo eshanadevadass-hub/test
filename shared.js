@@ -34,7 +34,8 @@ function expandHex3(hex){
   return '#'+hex.slice(1).split('').map(c=>c+c).join('');
 }
 
-function paintStaticWheel(targetCtx, targetSize){
+// Wheels next to a lightness control must re-call this with the current lightness on every change, not just on init.
+function paintStaticWheel(targetCtx, targetSize, lightness=55){
   const c = targetSize/2, rad = c-4;
   const imgData = targetCtx.createImageData(targetSize,targetSize);
   for(let y=0;y<targetSize;y++){
@@ -46,7 +47,7 @@ function paintStaticWheel(targetCtx, targetSize){
         let angle=Math.atan2(dy,dx)*180/Math.PI;
         angle=(angle+90+360)%360;
         const sat=Math.min(dist/rad,1)*100;
-        const [r,g,b]=hslToRgb(angle,sat,55);
+        const [r,g,b]=hslToRgb(angle,sat,lightness);
         imgData.data[idx]=r; imgData.data[idx+1]=g; imgData.data[idx+2]=b;
         const edge=rad-dist;
         imgData.data[idx+3]=edge<1.5?Math.max(0,edge/1.5)*255:255;
