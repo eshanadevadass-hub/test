@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Face analysis — Colouristic</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link active" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+  </div>
+
+  <section class="panel face-panel panel-face">
+    <p class="section-title">Your colour profile</p>
+    <p class="face-intro">Add a clear, well-lit photo of your face to estimate your undertone and get a palette suited to you. Everything runs right here in your browser — your photo is never uploaded anywhere.</p>
+
+    <div class="photo-actions">
+      <label class="iconbtn" for="fileUpload">Upload a photo</label>
+      <input type="file" id="fileUpload" accept="image/*" hidden>
+      <label class="iconbtn" for="fileCapture">Take a photo</label>
+      <input type="file" id="fileCapture" accept="image/*" capture="user" hidden>
+      <button class="iconbtn" id="liveCameraBtn">Open camera here instead</button>
+    </div>
+
+    <p id="cameraError" class="camera-error" style="display:none;"></p>
+
+    <div id="cameraStage" class="camera-stage" style="display:none;">
+      <video id="cameraVideo" class="camera-video" autoplay playsinline muted></video>
+      <div class="camera-controls">
+        <button class="iconbtn" id="snapBtn">Capture</button>
+        <button class="iconbtn" id="closeCameraBtn">Close camera</button>
+      </div>
+    </div>
+
+    <div id="photoStage" class="photo-stage" style="display:none;">
+      <div class="photo-canvas-wrap">
+        <canvas id="photoCanvas" class="photo-canvas"></canvas>
+        <div id="sampleCircle"></div>
+      </div>
+      <p class="hint">Drag the circle onto a clear patch of skin — cheek or forehead works best. Avoid hair, shadows, glasses, and makeup where you can.</p>
+      <button class="iconbtn" id="analyzeBtn">Analyze skin tone</button>
+    </div>
+
+    <div id="resultsStage" class="results-stage" style="display:none;">
+      <div class="result-summary">
+        <div class="base-swatch cvd-target" id="skinSwatch"></div>
+        <div class="base-codes">
+          <div><b id="undertoneLabel">—</b></div>
+          <div id="depthLabel">—</div>
+        </div>
+      </div>
+      <p id="resultBlurb" class="hint" style="margin-top:14px;"></p>
+
+      <p class="section-title" style="margin-top:24px;">Colours that suit you</p>
+      <p id="recommendedReason" class="hint" style="margin-top:0;margin-bottom:14px;"></p>
+      <div class="palette" id="recommendedGrid"></div>
+      <div id="recommendedExportRow"></div>
+
+      <p class="section-title" style="margin-top:24px;">Approach with caution</p>
+      <div class="palette caution" id="cautionGrid"></div>
+      <p class="hint">These tend to fight your undertone rather than lift it — not off-limits, just worth pairing carefully, kept away from your face, or balanced with a flattering neutral. Click any swatch to explore it further on the colour wheel.</p>
+
+      <p class="section-title" style="margin-top:28px;">Makeup shades for you</p>
+      <p class="hint" style="margin-top:0;margin-bottom:14px;">Matched to the same undertone and depth as your colour palette above — a starting point, not a rule, since finish, formula, and lighting all shift how a shade actually wears.</p>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Blush</p>
+      <div class="palette" id="blushGrid"></div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Eye shadow</p>
+      <div class="palette" id="eyeshadowGrid"></div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Lipstick</p>
+      <div class="palette" id="lipstickGrid"></div>
+
+      <p class="section-title" style="margin-top:28px;">Foundation, concealer, bronzer &amp; contour</p>
+      <p class="hint" style="margin-top:0;margin-bottom:14px;">Matched directly to your scanned skin tone. Pick a coverage preference to adjust the shade spread.</p>
+
+      <div class="mix-tabs" id="coverageTabs">
+        <button class="mix-tab active" data-coverage="light" type="button">Light</button>
+        <button class="mix-tab" data-coverage="medium" type="button">Medium</button>
+        <button class="mix-tab" data-coverage="full" type="button">Full</button>
+        <button class="mix-tab" data-coverage="tint" type="button">Skin tint</button>
+      </div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Foundation</p>
+      <div class="palette" id="foundationGrid"></div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Concealer</p>
+      <div class="palette" id="concealerGrid"></div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Bronzer</p>
+      <div class="palette" id="bronzerGrid"></div>
+
+      <p class="section-title" style="margin-top:18px;font-size:10px;">Contour</p>
+      <div class="palette" id="contourGrid"></div>
+
+      <p class="section-title" style="margin-top:28px;">Products for your skin type</p>
+      <p class="hint" style="margin-top:0;margin-bottom:14px;">Tell us how your skin behaves day-to-day, and we'll point you toward formulas and finishes that tend to work with it rather than against it.</p>
+
+      <select id="skinTypeSelect" class="cvd-select" style="width:100%;max-width:280px;margin-bottom:16px;">
+        <option value="">Select your skin type…</option>
+        <option value="oily">Oily</option>
+        <option value="dry">Dry</option>
+        <option value="textured">Textured</option>
+        <option value="hyperpigmentation">Hyperpigmentation</option>
+        <option value="combination">Combination</option>
+        <option value="sensitive">Sensitive</option>
+      </select>
+
+      <div id="skinTypeResult" style="display:none;">
+        <p class="mix-recipe" id="skinTypeTip"></p>
+        <ul id="skinTypeProducts" class="skin-type-list"></ul>
+      </div>
+
+      <p class="section-title" style="margin-top:28px;">Where to shop</p>
+      <p class="hint" style="margin-top:0;margin-bottom:14px;">General links, not specific product picks — exact shade availability varies by brand and changes often, so treat these as a starting point for browsing rather than a guarantee of an exact match.</p>
+
+      <p class="section-title" style="margin-top:0;font-size:10px;">Shop by retailer</p>
+      <div class="actions" style="margin-bottom:18px;">
+        <a class="iconbtn" href="https://www.sephora.com" target="_blank" rel="noopener">Sephora</a>
+        <a class="iconbtn" href="https://www.ulta.com" target="_blank" rel="noopener">Ulta</a>
+        <a class="iconbtn" href="https://www.target.com" target="_blank" rel="noopener">Target</a>
+        <a class="iconbtn" href="https://www.cvs.com" target="_blank" rel="noopener">CVS</a>
+        <a class="iconbtn" href="https://www.walmart.com" target="_blank" rel="noopener">Walmart</a>
+      </div>
+
+      <p class="section-title" style="margin-top:0;font-size:10px;">Shop by brand</p>
+      <div class="actions" style="margin-bottom:18px;">
+        <a class="iconbtn" href="https://www.fentybeauty.com" target="_blank" rel="noopener">Fenty Beauty</a>
+        <a class="iconbtn" href="https://www.narscosmetics.com" target="_blank" rel="noopener">NARS</a>
+        <a class="iconbtn" href="https://www.maccosmetics.com" target="_blank" rel="noopener">MAC</a>
+        <a class="iconbtn" href="https://www.itcosmetics.com" target="_blank" rel="noopener">IT Cosmetics</a>
+        <a class="iconbtn" href="https://www.elfcosmetics.com" target="_blank" rel="noopener">e.l.f. Cosmetics</a>
+        <a class="iconbtn" href="https://www.blackopalbeauty.com" target="_blank" rel="noopener">Black Opal</a>
+        <a class="iconbtn" href="https://www.milkmakeup.com" target="_blank" rel="noopener">Milk Makeup</a>
+      </div>
+
+      <button class="iconbtn" id="findMatchesBtn">Find exact shade matches online</button>
+      <div id="shadeCategoryPicker" style="display:none;margin-top:14px;">
+        <p class="hint" style="margin-top:0;margin-bottom:10px;">Choose a category — we'll work out the closest general shade family from your scanned colour and point you straight to real brand sites to compare it yourself.</p>
+        <div class="actions">
+          <button class="iconbtn" data-category="foundation">Foundation</button>
+          <button class="iconbtn" data-category="concealer">Concealer</button>
+          <button class="iconbtn" data-category="bronzer">Bronzer</button>
+          <button class="iconbtn" data-category="contour">Contour</button>
+          <button class="iconbtn" data-category="blush">Blush</button>
+          <button class="iconbtn" data-category="eyeshadow">Eye shadow</button>
+          <button class="iconbtn" data-category="lipstick">Lipstick</button>
+        </div>
+
+        <div id="shadeMatchResult" style="display:none;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--line);">
+          <div class="base-readout" style="border-top:none;padding-top:0;margin-bottom:12px;">
+            <div class="base-swatch cvd-target" id="shadeMatchSwatch"></div>
+            <div class="base-codes">
+              <div><b id="shadeMatchHex">#000000</b></div>
+              <div id="shadeMatchFamily">—</div>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:0;margin-bottom:10px;">This is a general reference, not a guaranteed match. Each button searches that brand's own site for this shade description — check whichever results look closest.</p>
+          <div class="actions" id="shadeMatchBrandLinks"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="shared.js"></script>
+<script>
+const fileUpload = document.getElementById('fileUpload');
+const fileCapture = document.getElementById('fileCapture');
+const liveCameraBtn = document.getElementById('liveCameraBtn');
+const cameraStage = document.getElementById('cameraStage');
+const cameraVideo = document.getElementById('cameraVideo');
+const snapBtn = document.getElementById('snapBtn');
+const closeCameraBtn = document.getElementById('closeCameraBtn');
+const cameraError = document.getElementById('cameraError');
+const photoStage = document.getElementById('photoStage');
+const photoCanvas = document.getElementById('photoCanvas');
+const photoCtx = photoCanvas.getContext('2d');
+const sampleCircle = document.getElementById('sampleCircle');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const resultsStage = document.getElementById('resultsStage');
+
+let cameraStream = null;
+let circlePos = {x:0,y:0};
+const SAMPLE_R = 22;
+
+function positionCircle(){
+  sampleCircle.style.width = (SAMPLE_R*2)+'px';
+  sampleCircle.style.height = (SAMPLE_R*2)+'px';
+  sampleCircle.style.left = circlePos.x+'px';
+  sampleCircle.style.top = circlePos.y+'px';
+}
+
+function loadImageFile(file){
+  if(!file) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const maxW = 360;
+    const scale = Math.min(1, maxW/img.width);
+    const w = Math.round(img.width*scale);
+    const h = Math.round(img.height*scale);
+    photoCanvas.width = w;
+    photoCanvas.height = h;
+    photoCtx.drawImage(img,0,0,w,h);
+    photoStage.style.display='block';
+    resultsStage.style.display='none';
+    circlePos = {x: w/2, y: h/2.4};
+    positionCircle();
+    stopCamera();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+fileUpload.addEventListener('change', e=> loadImageFile(e.target.files[0]));
+fileCapture.addEventListener('change', e=> loadImageFile(e.target.files[0]));
+
+liveCameraBtn.addEventListener('click', async ()=>{
+  cameraError.style.display='none';
+  try{
+    cameraStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+    cameraVideo.srcObject = cameraStream;
+    cameraStage.style.display='block';
+  }catch(err){
+    cameraError.textContent = "Couldn't open the camera here — your browser may be blocking it for this page. Try “Take a photo” instead, which uses your device's own camera app.";
+    cameraError.style.display='block';
+  }
+});
+
+snapBtn.addEventListener('click', ()=>{
+  const vw = cameraVideo.videoWidth, vh = cameraVideo.videoHeight;
+  if(!vw) return;
+  const maxW = 360;
+  const scale = Math.min(1,maxW/vw);
+  const w = Math.round(vw*scale), h = Math.round(vh*scale);
+  photoCanvas.width = w; photoCanvas.height = h;
+  photoCtx.drawImage(cameraVideo,0,0,w,h);
+  photoStage.style.display='block';
+  resultsStage.style.display='none';
+  circlePos = {x:w/2, y:h/2.4};
+  positionCircle();
+  stopCamera();
+});
+
+closeCameraBtn.addEventListener('click', stopCamera);
+
+function stopCamera(){
+  if(cameraStream){
+    cameraStream.getTracks().forEach(t=>t.stop());
+    cameraStream=null;
+  }
+  cameraStage.style.display='none';
+}
+
+let draggingCircle=false;
+sampleCircle.addEventListener('pointerdown', e=>{draggingCircle=true; sampleCircle.setPointerCapture(e.pointerId);});
+sampleCircle.addEventListener('pointerup', ()=>{draggingCircle=false;});
+sampleCircle.addEventListener('pointermove', e=>{
+  if(!draggingCircle) return;
+  const rect = photoCanvas.getBoundingClientRect();
+  const scaleX = photoCanvas.width/rect.width, scaleY = photoCanvas.height/rect.height;
+  let x = (e.clientX-rect.left)*scaleX;
+  let y = (e.clientY-rect.top)*scaleY;
+  x = Math.max(SAMPLE_R, Math.min(photoCanvas.width-SAMPLE_R, x));
+  y = Math.max(SAMPLE_R, Math.min(photoCanvas.height-SAMPLE_R, y));
+  circlePos = {x,y};
+  positionCircle();
+});
+
+function rgbToLab(r,g,b){
+  let [R,G,B] = [r,g,b].map(v=>{
+    v/=255;
+    return v>0.04045 ? Math.pow((v+0.055)/1.055,2.4) : v/12.92;
+  });
+  const X = R*0.4124+G*0.3576+B*0.1805;
+  const Y = R*0.2126+G*0.7152+B*0.0722;
+  const Z = R*0.0193+G*0.1192+B*0.9505;
+  const Xn=0.95047, Yn=1.0, Zn=1.08883;
+  const f = t=> t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116);
+  const fx=f(X/Xn), fy=f(Y/Yn), fz=f(Z/Zn);
+  const L = 116*fy-16;
+  const a = 500*(fx-fy);
+  const bb = 200*(fy-fz);
+  return {L,a,b:bb};
+}
+
+function analyzeSkin(){
+  const w = photoCanvas.width, h = photoCanvas.height;
+  const x0 = Math.max(0, Math.floor(circlePos.x-SAMPLE_R));
+  const y0 = Math.max(0, Math.floor(circlePos.y-SAMPLE_R));
+  const x1 = Math.min(w, Math.ceil(circlePos.x+SAMPLE_R));
+  const y1 = Math.min(h, Math.ceil(circlePos.y+SAMPLE_R));
+  const data = photoCtx.getImageData(x0,y0,x1-x0,y1-y0).data;
+  let rSum=0,gSum=0,bSum=0,count=0;
+  for(let y=y0;y<y1;y++){
+    for(let x=x0;x<x1;x++){
+      const dx=x-circlePos.x, dy=y-circlePos.y;
+      if(dx*dx+dy*dy>SAMPLE_R*SAMPLE_R) continue;
+      const idx = ((y-y0)*(x1-x0)+(x-x0))*4;
+      const r=data[idx],g=data[idx+1],b=data[idx+2];
+      const lum = 0.299*r+0.587*g+0.114*b;
+      if(lum>246||lum<35) continue;
+      rSum+=r; gSum+=g; bSum+=b; count++;
+    }
+  }
+  if(count<10){ return null; }
+  const r=rSum/count, g=gSum/count, b=bSum/count;
+  const lab = rgbToLab(r,g,b);
+  let undertone;
+  const diff = lab.b - lab.a;
+  if(diff > 6) undertone='warm';
+  else if(diff < -6) undertone='cool';
+  else undertone='neutral';
+  let depth;
+  if(lab.L>=68) depth='light';
+  else if(lab.L>=48) depth='medium';
+  else depth='deep';
+  return {r,g,b,lab,undertone,depth};
+}
+
+const UNDERTONE_TEXT = {
+  warm:"Your skin leans warm — there's more gold, peach, or yellow beneath the surface.",
+  cool:"Your skin leans cool — there's more pink, red, or blue beneath the surface.",
+  neutral:"Your undertone reads fairly neutral — a balance of warm and cool, which gives you a wide range to work with."
+};
+const DEPTH_TEXT = {light:'light depth', medium:'medium depth', deep:'deep depth'};
+
+const REASON_TEXT = {
+  warm:"These lean toward the same family as your own undertone — gold, coral, olive, warm red. Sitting close to the warmth already in your skin, they blend in rather than compete, which reads as a natural glow instead of a colour fighting your face.",
+  cool:"These lean toward the same family as your own undertone — berry, sapphire, emerald, cool violet. Because they share the pink or blue base your skin already has, they reinforce it instead of clashing with it, which is what makes a colour look chosen for you rather than borrowed.",
+  neutral:"Your undertone doesn't pull strongly warm or cool, so these are drawn from both families rather than one. Each still carries enough depth or saturation to stand out against a balanced complexion — a colour with too little contrast tends to disappear on neutral undertones rather than flatter them."
+};
+
+const RECOMMENDED_HUES = {
+  warm: [16,35,45,90,150,25,5],
+  cool: [210,260,330,150,350,190,280],
+  neutral: [200,150,340,20,270,60,10]
+};
+const CAUTION_HUES = {
+  warm: [210,220,330],
+  cool: [35,45,25],
+  neutral: [55,205]
+};
+const MAKEUP_HUES = {
+  blush: { warm:[18,8,28], cool:[340,352,325], neutral:[355,12,345] },
+  eyeshadow: { warm:[30,42,75,20], cool:[280,300,255,220], neutral:[25,270,35,0] },
+  lipstick: { warm:[10,20,4], cool:[355,330,300], neutral:[358,12,350] }
+};
+const DEPTH_L = {light:68, medium:54, deep:38};
+const SAT_BY_UNDERTONE = {warm:68, cool:60, neutral:50};
+
+function buildFacePalette(gridEl, hues, undertone, depth, cautious, opts={}){
+  gridEl.innerHTML='';
+  const baseL = DEPTH_L[depth];
+  const sat = Math.min(90, Math.max(15, SAT_BY_UNDERTONE[undertone] - (cautious?10:0) + (opts.satOffset||0)));
+  const shades = hues.map((h,i)=>({
+    h, s:sat, l: Math.min(85, Math.max(20, baseL + (i%3-1)*8 + (opts.lOffset||0)))
+  }));
+  shades.forEach(sh=>{
+    const hex = hslToHex(sh.h,sh.s,sh.l);
+    const card = document.createElement('div');
+    card.className='swatch';
+    const colorDiv = document.createElement('div');
+    colorDiv.className='swatch-color cvd-target';
+    colorDiv.style.background=hex;
+    colorDiv.title = 'Click to explore this colour on the colour wheel';
+    colorDiv.addEventListener('click', ()=>{
+      const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
+      location.href = 'index.html#'+params.toString();
+    });
+    const info = document.createElement('div');
+    info.className='swatch-info';
+    const hexLabel = document.createElement('p');
+    hexLabel.className='swatch-hex';
+    hexLabel.textContent = hex.toUpperCase();
+    info.appendChild(hexLabel);
+    card.appendChild(colorDiv);
+    card.appendChild(info);
+    gridEl.appendChild(card);
+  });
+  return shades;
+}
+
+const SKIN_TYPE_INFO = {
+  oily: {
+    tip:"Oily skin: prioritize oil-free, mattifying formulas that control shine without stripping moisture.",
+    products:["Oil-free liquid foundation","Mattifying primer","Translucent setting powder","Blotting papers","Long-wear, transfer-resistant formulas"]
+  },
+  dry: {
+    tip:"Dry skin: look for hydrating, dewy formulas — avoid anything with a matte-only finish.",
+    products:["Hydrating cream or liquid foundation","Illuminating, dewy-finish primer","Cream blush and bronzer instead of powder","Facial oil or moisturizer as a makeup base","Setting spray instead of powder"]
+  },
+  textured: {
+    tip:"Textured skin: choose blurring, smoothing formulas that diffuse light instead of settling into fine lines or bumps.",
+    products:["Silicone-based smoothing primer","Medium-coverage, soft-focus foundation","Cream-to-powder formulas over heavy powder","Setting spray to blend product edges"]
+  },
+  hyperpigmentation: {
+    tip:"Hyperpigmentation: colour-correcting and buildable full coverage help even out tone without caking.",
+    products:["Colour corrector (peach/orange tones for dark spots)","Full-coverage, buildable foundation","High-pigment concealer","Setting powder to lock coverage in place","SPF-inclusive formulas to help prevent further pigmentation"]
+  },
+  combination: {
+    tip:"Combination skin: balance matters — control shine in the T-zone while keeping hydration everywhere else.",
+    products:["Semi-matte, buildable foundation","Mattifying primer for the T-zone only","Setting powder targeted to oily areas","Cream blush on the cheeks for a natural flush"]
+  },
+  sensitive: {
+    tip:"Sensitive skin: fragrance-free, hypoallergenic, and mineral-based formulas lower the risk of irritation.",
+    products:["Mineral powder foundation","Fragrance-free, dermatologist-tested formulas","Hypoallergenic primer","Always patch-test a new product before full application"]
+  }
+};
+
+const skinTypeSelect = document.getElementById('skinTypeSelect');
+const skinTypeResult = document.getElementById('skinTypeResult');
+const skinTypeTip = document.getElementById('skinTypeTip');
+const skinTypeProducts = document.getElementById('skinTypeProducts');
+
+skinTypeSelect.addEventListener('change', ()=>{
+  const info = SKIN_TYPE_INFO[skinTypeSelect.value];
+  if(!info){ skinTypeResult.style.display='none'; return; }
+  skinTypeTip.textContent = info.tip;
+  skinTypeProducts.innerHTML = info.products.map(p=>'<li>'+p+'</li>').join('');
+  skinTypeResult.style.display='block';
+});
+
+function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+
+function computeComplexionShades(skinHsl, undertone, coverage){
+  const {h,s,l} = skinHsl;
+  const spread = {light:3, medium:4, full:6, tint:2}[coverage] || 3;
+  const bronzeHue = undertone==='warm' ? 26 : undertone==='cool' ? 14 : 20;
+  return {
+    foundation: [
+      {label:'Fair match', h, s, l: clamp(l+spread,10,92)},
+      {label:'True match', h, s, l},
+      {label:'Deep match', h, s, l: clamp(l-spread,10,92)}
+    ],
+    concealer: [
+      {label:'Brightening', h, s: clamp(s-5,10,90), l: clamp(l+14,10,94)},
+      {label:'True match', h, s, l}
+    ],
+    bronzer: [
+      {label:'Soft bronzer', h: bronzeHue, s: clamp(s+12,25,85), l: clamp(l-10,12,80)},
+      {label:'Deep bronzer', h: bronzeHue, s: clamp(s+18,25,90), l: clamp(l-18,10,75)}
+    ],
+    contour: [
+      {label:'Cool contour', h, s: clamp(s-22,5,55), l: clamp(l-18,8,75)},
+      {label:'Deep contour', h, s: clamp(s-18,5,55), l: clamp(l-26,8,70)}
+    ]
+  };
+}
+
+function buildShadeGrid(gridEl, shades){
+  gridEl.innerHTML='';
+  shades.forEach(sh=>{
+    const hex = hslToHex(sh.h, sh.s, sh.l);
+    const card = document.createElement('div');
+    card.className='swatch';
+    const colorDiv = document.createElement('div');
+    colorDiv.className='swatch-color cvd-target';
+    colorDiv.style.background=hex;
+    colorDiv.title = 'Click to explore this colour on the colour wheel';
+    colorDiv.addEventListener('click', ()=>{
+      const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
+      location.href = 'index.html#'+params.toString();
+    });
+    const info = document.createElement('div');
+    info.className='swatch-info';
+    const hexLabel = document.createElement('p');
+    hexLabel.className='swatch-hex';
+    hexLabel.textContent = hex.toUpperCase();
+    const roleLabel = document.createElement('p');
+    roleLabel.className='swatch-role';
+    roleLabel.textContent = sh.label;
+    info.appendChild(hexLabel);
+    info.appendChild(roleLabel);
+    card.appendChild(colorDiv);
+    card.appendChild(info);
+    gridEl.appendChild(card);
+  });
+}
+
+let lastResult = null;
+let currentCoverage = 'light';
+let lastShadeSets = {};
+
+function renderComplexionShades(){
+  if(!lastResult) return;
+  const skinHsl = rgbToHsl(lastResult.r, lastResult.g, lastResult.b);
+  const shades = computeComplexionShades(skinHsl, lastResult.undertone, currentCoverage);
+  buildShadeGrid(document.getElementById('foundationGrid'), shades.foundation);
+  buildShadeGrid(document.getElementById('concealerGrid'), shades.concealer);
+  buildShadeGrid(document.getElementById('bronzerGrid'), shades.bronzer);
+  buildShadeGrid(document.getElementById('contourGrid'), shades.contour);
+  lastShadeSets.foundation = shades.foundation;
+  lastShadeSets.concealer = shades.concealer;
+  lastShadeSets.bronzer = shades.bronzer;
+  lastShadeSets.contour = shades.contour;
+}
+
+document.querySelectorAll('#coverageTabs .mix-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#coverageTabs .mix-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCoverage = btn.dataset.coverage;
+    renderComplexionShades();
+  });
+});
+
+function shadeFamilyName(h, l){
+  let hue;
+  if(h<15||h>=345) hue='red';
+  else if(h<45) hue='orange';
+  else if(h<70) hue='amber';
+  else if(h<90) hue='yellow';
+  else if(h<150) hue='green';
+  else if(h<195) hue='teal';
+  else if(h<250) hue='blue';
+  else if(h<275) hue='indigo';
+  else if(h<300) hue='violet';
+  else if(h<330) hue='magenta';
+  else hue='rose';
+  const depth = l>=70 ? 'light' : l>=45 ? 'medium' : 'deep';
+  return depth+' '+hue;
+}
+
+const SHADE_PRIMARY_INDEX = {foundation:1, concealer:1, bronzer:0, contour:0, blush:0, eyeshadow:0, lipstick:0};
+const COMPLEXION_CATEGORIES = ['foundation','concealer','bronzer','contour'];
+const COMPARE_BRANDS = [
+  ['Sephora','sephora.com'],
+  ['Ulta','ulta.com'],
+  ['Fenty Beauty','fentybeauty.com'],
+  ['NARS','narscosmetics.com'],
+  ['MAC','maccosmetics.com'],
+  ['IT Cosmetics','itcosmetics.com'],
+  ['e.l.f. Cosmetics','elfcosmetics.com'],
+  ['Black Opal','blackopalbeauty.com'],
+  ['Milk Makeup','milkmakeup.com']
+];
+
+function complexionFamilyName(l, undertone){
+  let depthWord;
+  if(l>=78) depthWord='porcelain';
+  else if(l>=68) depthWord='fair';
+  else if(l>=58) depthWord='light';
+  else if(l>=48) depthWord='medium';
+  else if(l>=38) depthWord='tan';
+  else if(l>=28) depthWord='deep';
+  else depthWord='rich deep';
+  const undertoneWord = undertone==='warm' ? 'warm golden' : undertone==='cool' ? 'cool pink' : 'neutral';
+  return depthWord+' '+undertoneWord;
+}
+
+document.getElementById('findMatchesBtn').addEventListener('click', ()=>{
+  if(!lastResult) return;
+  const picker = document.getElementById('shadeCategoryPicker');
+  picker.style.display = picker.style.display==='none' ? 'block' : 'none';
+});
+
+document.querySelectorAll('#shadeCategoryPicker [data-category]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const cat = btn.dataset.category;
+    const shades = lastShadeSets[cat];
+    if(!lastResult || !shades || !shades.length) return;
+    const primary = shades[SHADE_PRIMARY_INDEX[cat]] || shades[0];
+    const hex = hslToHex(primary.h, primary.s, primary.l).toUpperCase();
+    const isComplexion = COMPLEXION_CATEGORIES.includes(cat);
+    const family = isComplexion ? complexionFamilyName(primary.l, lastResult.undertone) : shadeFamilyName(primary.h, primary.l);
+    const label = btn.textContent;
+
+    document.getElementById('shadeMatchSwatch').style.background = hex;
+    document.getElementById('shadeMatchHex').textContent = hex;
+    document.getElementById('shadeMatchFamily').textContent = 'Closest general match for '+label.toLowerCase()+': '+family;
+
+    const searchTerm = lastResult.undertone+' undertone '+family+' '+label.toLowerCase();
+    const linksEl = document.getElementById('shadeMatchBrandLinks');
+    linksEl.innerHTML = COMPARE_BRANDS.map(([name,domain])=>{
+      const q = 'site:'+domain+' '+searchTerm;
+      const href = 'https://www.google.com/search?q='+encodeURIComponent(q);
+      return '<a class="iconbtn" href="'+href+'" target="_blank" rel="noopener">'+name+'</a>';
+    }).join('');
+
+    document.getElementById('shadeMatchResult').style.display = 'block';
+  });
+});
+
+attachExportButtons('recommendedExportRow', 'recommendedGrid', 'colouristic-recommended-colours', 'Colours that suit you', 'My colours');
+
+analyzeBtn.addEventListener('click', ()=>{
+  const result = analyzeSkin();
+  if(!result){
+    alert('Could not get a clean reading from that spot — try dragging the circle onto an evenly lit patch of skin.');
+    return;
+  }
+  const hex = '#'+[result.r,result.g,result.b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+  document.getElementById('skinSwatch').style.background = hex;
+  document.getElementById('undertoneLabel').textContent = result.undertone[0].toUpperCase()+result.undertone.slice(1)+' undertone';
+  document.getElementById('depthLabel').textContent = DEPTH_TEXT[result.depth];
+  document.getElementById('resultBlurb').textContent = UNDERTONE_TEXT[result.undertone] + ' This is a rough, lighting-dependent estimate — treat it as a starting point, not a verdict.';
+  document.getElementById('recommendedReason').textContent = REASON_TEXT[result.undertone];
+  buildFacePalette(document.getElementById('recommendedGrid'), RECOMMENDED_HUES[result.undertone], result.undertone, result.depth, false);
+  buildFacePalette(document.getElementById('cautionGrid'), CAUTION_HUES[result.undertone], result.undertone, result.depth, true);
+  lastShadeSets.blush = buildFacePalette(document.getElementById('blushGrid'), MAKEUP_HUES.blush[result.undertone], result.undertone, result.depth, false, {lOffset:16, satOffset:-15});
+  lastShadeSets.eyeshadow = buildFacePalette(document.getElementById('eyeshadowGrid'), MAKEUP_HUES.eyeshadow[result.undertone], result.undertone, result.depth, false, {lOffset:-2, satOffset:-22});
+  lastShadeSets.lipstick = buildFacePalette(document.getElementById('lipstickGrid'), MAKEUP_HUES.lipstick[result.undertone], result.undertone, result.depth, false, {lOffset:-8, satOffset:16});
+  document.getElementById('shadeCategoryPicker').style.display = 'none';
+  document.getElementById('shadeMatchResult').style.display = 'none';
+  lastResult = result;
+  renderComplexionShades();
+  resultsStage.style.display='block';
+  resultsStage.scrollIntoView({behavior:'smooth', block:'start'});
+});
+</script>
+</body>
+</html>

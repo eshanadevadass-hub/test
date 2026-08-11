@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library — Colouristic</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link active" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+  </div>
+
+  <div class="panel panel-library">
+    <div class="palette-head">
+      <p class="section-title" style="margin:0;">Your libraries</p>
+      <div class="actions">
+        <button class="iconbtn" id="newLibraryBtn" type="button">+ New library</button>
+        <button class="iconbtn" id="renameLibraryBtn" type="button">Rename this library</button>
+        <button class="iconbtn" id="deleteLibraryBtn" type="button">Delete this library</button>
+      </div>
+    </div>
+    <div class="harmony-grid" id="libraryTabs"></div>
+
+    <div id="libraryContent" style="margin-top:24px;"></div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+let currentLibraryId = null;
+
+function ensureCurrentLibrary(data){
+  if(!data.libraries.find(l=>l.id===currentLibraryId)){
+    currentLibraryId = data.libraries[0].id;
+  }
+}
+
+function renderLibraryTabs(){
+  const data = loadLibraryData();
+  ensureCurrentLibrary(data);
+  const tabsEl = document.getElementById('libraryTabs');
+  tabsEl.innerHTML = '';
+  data.libraries.forEach(lib=>{
+    const btn = document.createElement('button');
+    btn.className = 'harmony-btn'+(lib.id===currentLibraryId ? ' active' : '');
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = lib.name;
+    const countSpan = document.createElement('span');
+    countSpan.className = 'n';
+    countSpan.textContent = lib.palettes.length+' palette'+(lib.palettes.length===1?'':'s');
+    btn.appendChild(nameSpan);
+    btn.appendChild(countSpan);
+    btn.addEventListener('click', ()=>{
+      currentLibraryId = lib.id;
+      renderLibraryTabs();
+      renderLibraryContent();
+    });
+    tabsEl.appendChild(btn);
+  });
+}
+
+function renderLibraryContent(){
+  const data = loadLibraryData();
+  ensureCurrentLibrary(data);
+  const lib = data.libraries.find(l=>l.id===currentLibraryId);
+  const contentEl = document.getElementById('libraryContent');
+  contentEl.innerHTML = '';
+
+  if(!lib.palettes.length){
+    const empty = document.createElement('p');
+    empty.className = 'hint';
+    empty.style.marginTop = '0';
+    empty.textContent = 'No palettes saved here yet. From the Palette generator, Photo palette, Mood finder, or Face analysis page, use "Save to library" under any palette.';
+    contentEl.appendChild(empty);
+    return;
+  }
+
+  lib.palettes.forEach(pal=>{
+    const card = document.createElement('div');
+    card.className = 'panel library-palette-card';
+
+    const head = document.createElement('div');
+    head.className = 'palette-head';
+    const nameEl = document.createElement('p');
+    nameEl.className = 'section-title';
+    nameEl.style.margin = '0';
+    nameEl.textContent = pal.name;
+
+    const dateEl = document.createElement('p');
+    dateEl.className = 'hint';
+    dateEl.style.cssText = 'margin:2px 0 0;';
+    dateEl.textContent = new Date(pal.createdAt).toLocaleDateString(undefined, {year:'numeric',month:'short',day:'numeric'});
+
+    const titleWrap = document.createElement('div');
+    titleWrap.appendChild(nameEl);
+    titleWrap.appendChild(dateEl);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'iconbtn';
+    renameBtn.type = 'button';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', ()=>{
+      const newName = prompt('Rename this palette:', pal.name);
+      if(newName && newName.trim()){
+        renamePaletteInLibrary(lib.id, pal.id, newName.trim());
+        renderLibraryTabs();
+        renderLibraryContent();
+      }
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'iconbtn';
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', ()=>{
+      if(confirm('Delete "'+pal.name+'"? This can\'t be undone.')){
+        deletePaletteFromLibrary(lib.id, pal.id);
+        renderLibraryTabs();
+        renderLibraryContent();
+      }
+    });
+
+    actions.appendChild(renameBtn);
+    actions.appendChild(deleteBtn);
+    head.appendChild(titleWrap);
+    head.appendChild(actions);
+
+    const grid = document.createElement('div');
+    grid.className = 'palette';
+    pal.colors.forEach(c=>{
+      grid.appendChild(makeSwatchCard(c.hex, c.label));
+    });
+
+    const exportRow = document.createElement('div');
+    exportRow.className = 'actions';
+    exportRow.style.marginTop = '12px';
+
+    function flash(btn){
+      const original = btn.textContent;
+      btn.textContent = 'Saved';
+      setTimeout(()=>{ btn.textContent = original; }, 1200);
+    }
+
+    const slug = pal.name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'palette';
+
+    const pngBtn = document.createElement('button');
+    pngBtn.className = 'iconbtn';
+    pngBtn.type = 'button';
+    pngBtn.textContent = 'Download PNG';
+    pngBtn.addEventListener('click', ()=>{ exportPaletteAsPNG(pal.colors, 'colouristic-'+slug); flash(pngBtn); });
+
+    const pdfBtn = document.createElement('button');
+    pdfBtn.className = 'iconbtn';
+    pdfBtn.type = 'button';
+    pdfBtn.textContent = 'Download PDF';
+    pdfBtn.addEventListener('click', ()=>{ exportPaletteAsPDF(pal.colors, 'colouristic-'+slug, pal.name); flash(pdfBtn); });
+
+    exportRow.appendChild(pngBtn);
+    exportRow.appendChild(pdfBtn);
+
+    card.appendChild(head);
+    card.appendChild(grid);
+    card.appendChild(exportRow);
+    contentEl.appendChild(card);
+  });
+}
+
+document.getElementById('newLibraryBtn').addEventListener('click', ()=>{
+  const name = prompt('Name your new library:', 'New library');
+  if(name && name.trim()){
+    const lib = createLibrary(name.trim());
+    currentLibraryId = lib.id;
+    renderLibraryTabs();
+    renderLibraryContent();
+  }
+});
+
+document.getElementById('renameLibraryBtn').addEventListener('click', ()=>{
+  const data = loadLibraryData();
+  ensureCurrentLibrary(data);
+  const lib = data.libraries.find(l=>l.id===currentLibraryId);
+  const newName = prompt('Rename this library:', lib.name);
+  if(newName && newName.trim()){
+    renameLibrary(currentLibraryId, newName.trim());
+    renderLibraryTabs();
+    renderLibraryContent();
+  }
+});
+
+document.getElementById('deleteLibraryBtn').addEventListener('click', ()=>{
+  const data = loadLibraryData();
+  ensureCurrentLibrary(data);
+  const lib = data.libraries.find(l=>l.id===currentLibraryId);
+  if(data.libraries.length===1){
+    alert("You can't delete your only library — rename it instead, or create another one first.");
+    return;
+  }
+  if(confirm('Delete "'+lib.name+'" and all '+lib.palettes.length+' palette(s) inside it? This can\'t be undone.')){
+    deleteLibrary(currentLibraryId);
+    currentLibraryId = null;
+    renderLibraryTabs();
+    renderLibraryContent();
+  }
+});
+
+renderLibraryTabs();
+renderLibraryContent();
+</script>
+</body>
+</html>

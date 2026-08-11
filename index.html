@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colouristic — colour wheel &amp; palette generator</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link active" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+  </div>
+
+  <div class="layout">
+  <div class="panel wheel-stage panel-wheel">
+    <div class="wheel-wrap">
+      <canvas id="wheelCanvas" width="280" height="280" tabindex="0" class="cvd-target"></canvas>
+      <div id="marker"></div>
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-label"><span>Lightness</span><span id="lightVal">55%</span></div>
+      <input type="range" id="lightSlider" min="10" max="90" value="55" step="1">
+    </div>
+  </div>
+
+  <div class="panel panel-wheel-details">
+    <div class="base-readout" style="border-top:none;padding-top:0;">
+      <div class="base-swatch cvd-target" id="baseSwatch"></div>
+      <div class="base-codes">
+        <div><input type="text" id="baseHex" class="hex-input" value="#000000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Edit hex code"></div>
+        <div id="baseHsl">hsl(0, 0%, 0%)</div>
+      </div>
+    </div>
+
+    <div class="mix-guide">
+      <div class="mix-tabs">
+        <button class="mix-tab active" data-medium="paint" type="button">Paint</button>
+        <button class="mix-tab" data-medium="light" type="button">Light</button>
+      </div>
+      <div id="mixContent" class="mix-content">
+        <div id="lightBlock" class="medium-block">
+          <p class="mix-recipe">Drag the bars to set red, green, and blue light levels — this is additive mixing, the way screens, stage lights, and RGB LEDs build colour.</p>
+          <div class="mix-bars">
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Red</span>
+              <div class="mix-bar-track" id="trackR"><div class="mix-bar-fill" id="fillR" style="background:#e5484d;"></div><div class="mix-bar-thumb" id="thumbR"></div></div>
+              <span class="mix-bar-pct" id="pctR">0%</span>
+            </div>
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Green</span>
+              <div class="mix-bar-track" id="trackG"><div class="mix-bar-fill" id="fillG" style="background:#3ba55c;"></div><div class="mix-bar-thumb" id="thumbG"></div></div>
+              <span class="mix-bar-pct" id="pctG">0%</span>
+            </div>
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Blue</span>
+              <div class="mix-bar-track" id="trackB"><div class="mix-bar-fill" id="fillB" style="background:#4a7dff;"></div><div class="mix-bar-thumb" id="thumbB"></div></div>
+              <span class="mix-bar-pct" id="pctB">0%</span>
+            </div>
+          </div>
+          <p class="mix-note">All three at full strength makes white light; all three at zero is darkness. Raise a channel to push the colour toward it, lower all three together to dim it.</p>
+        </div>
+        <div id="paintBlock" class="medium-block">
+          <p class="mix-recipe" id="paintRecipe">Start with —, then adjust.</p>
+          <div class="mix-bars">
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Cyan</span>
+              <div class="mix-bar-track" id="trackC"><div class="mix-bar-fill" id="fillC" style="background:#3badc9;"></div><div class="mix-bar-thumb" id="thumbC"></div></div>
+              <span class="mix-bar-pct" id="pctC">0%</span>
+            </div>
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Magenta</span>
+              <div class="mix-bar-track" id="trackM"><div class="mix-bar-fill" id="fillM" style="background:#c9469b;"></div><div class="mix-bar-thumb" id="thumbM"></div></div>
+              <span class="mix-bar-pct" id="pctM">0%</span>
+            </div>
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Yellow</span>
+              <div class="mix-bar-track" id="trackY"><div class="mix-bar-fill" id="fillY" style="background:#d9b23b;"></div><div class="mix-bar-thumb" id="thumbY"></div></div>
+              <span class="mix-bar-pct" id="pctY">0%</span>
+            </div>
+            <div class="mix-bar-row">
+              <span class="mix-bar-label">Black</span>
+              <div class="mix-bar-track" id="trackK"><div class="mix-bar-fill" id="fillK" style="background:#7a7a7a;"></div><div class="mix-bar-thumb" id="thumbK"></div></div>
+              <span class="mix-bar-pct" id="pctK">0%</span>
+            </div>
+          </div>
+          <p class="mix-note" id="paintNote"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="contrast-check">
+      <p class="section-title" style="margin-bottom:10px;">Text contrast</p>
+      <div class="contrast-row">
+        <span class="contrast-swatch contrast-swatch-white"></span>
+        <span class="contrast-label">on white</span>
+        <span class="contrast-value" id="contrastWhiteVal">1.00:1</span>
+        <span class="contrast-badge" id="contrastWhiteBadge">Fail</span>
+      </div>
+      <div class="contrast-row">
+        <span class="contrast-swatch contrast-swatch-black"></span>
+        <span class="contrast-label">on black</span>
+        <span class="contrast-value" id="contrastBlackVal">1.00:1</span>
+        <span class="contrast-badge" id="contrastBlackBadge">Fail</span>
+      </div>
+    </div>
+
+    <div class="hint">Drag anywhere on the wheel — angle sets hue, distance from centre sets saturation. Focus the wheel and use arrow keys to nudge (hold Shift for bigger steps).</div>
+
+    <div class="actions" style="width:100%;">
+      <button class="iconbtn" id="shuffleBtn">Randomize</button>
+      <a class="iconbtn" id="buildPaletteLink" href="palette-generator.html">Build a palette from this colour</a>
+      <button class="iconbtn" id="copyLinkBtn">Copy link</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+const canvas = document.getElementById('wheelCanvas');
+const ctx = canvas.getContext('2d');
+const size = 280;
+const center = size/2;
+const radius = center - 4;
+
+function drawWheel(){
+  const imgData = ctx.createImageData(size,size);
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const dx = x-center, dy = y-center;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      const idx = (y*size+x)*4;
+      if(dist<=radius){
+        let angle = Math.atan2(dy,dx)*180/Math.PI;
+        angle = (angle+90+360)%360;
+        const sat = Math.min(dist/radius,1)*100;
+        const [r,g,b] = hslToRgb(angle,sat,55);
+        imgData.data[idx]=r; imgData.data[idx+1]=g; imgData.data[idx+2]=b;
+        const edge = radius-dist;
+        imgData.data[idx+3] = edge<1.5 ? Math.max(0,edge/1.5)*255 : 255;
+      } else {
+        imgData.data[idx+3]=0;
+      }
+    }
+  }
+  ctx.putImageData(imgData,0,0);
+}
+
+drawWheel();
+
+let base = {h:265, s:55, l:55};
+
+const marker = document.getElementById('marker');
+const lightSlider = document.getElementById('lightSlider');
+const lightVal = document.getElementById('lightVal');
+const baseSwatch = document.getElementById('baseSwatch');
+const baseHex = document.getElementById('baseHex');
+const baseHsl = document.getElementById('baseHsl');
+const buildPaletteLink = document.getElementById('buildPaletteLink');
+baseHex.addEventListener('focus', ()=> baseHex.select());
+baseHex.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ applyHexInput(); baseHex.blur(); }
+});
+baseHex.addEventListener('blur', applyHexInput);
+
+function polarFromHS(h,s){
+  const rad = (h-90)*Math.PI/180;
+  const dist = (s/100)*radius;
+  return { x: center + dist*Math.cos(rad), y: center + dist*Math.sin(rad) };
+}
+
+function updateMarker(){
+  const p = polarFromHS(base.h, base.s);
+  marker.style.left = p.x+'px';
+  marker.style.top = p.y+'px';
+}
+
+function updateBaseReadout(){
+  const hex = hslToHex(base.h, base.s, base.l);
+  baseSwatch.style.background = hex;
+  if(document.activeElement !== baseHex) baseHex.value = hex.toUpperCase();
+  baseHsl.textContent = `hsl(${Math.round(base.h)}, ${Math.round(base.s)}%, ${Math.round(base.l)}%)`;
+  lightVal.textContent = Math.round(base.l)+'%';
+  document.documentElement.style.setProperty('--live-color', `hsl(${Math.round(base.h)}, ${Math.round(Math.max(base.s,45))}%, ${Math.round(Math.min(Math.max(base.l,35),68))}%)`);
+  buildPaletteLink.href = 'palette-generator.html#'+new URLSearchParams({h:base.h.toFixed(1), s:base.s.toFixed(1), l:base.l.toFixed(1)}).toString();
+  updateMixGuide();
+  updateContrastReadout();
+}
+
+function relLuminance(r,g,b){
+  const lin = v=>{ v/=255; return v<=0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+}
+function contrastRatio(rgb1, rgb2){
+  const L1 = relLuminance(rgb1[0],rgb1[1],rgb1[2]);
+  const L2 = relLuminance(rgb2[0],rgb2[1],rgb2[2]);
+  const lighter = Math.max(L1,L2), darker = Math.min(L1,L2);
+  return (lighter+0.05)/(darker+0.05);
+}
+function contrastLevel(ratio){
+  if(ratio>=7) return {label:'AAA', pass:true};
+  if(ratio>=4.5) return {label:'AA', pass:true};
+  if(ratio>=3) return {label:'AA Large', pass:true};
+  return {label:'Fail', pass:false};
+}
+function updateContrastReadout(){
+  const rgb = hslToRgb(base.h, base.s, base.l);
+  const whiteRatio = contrastRatio(rgb, [255,255,255]);
+  const blackRatio = contrastRatio(rgb, [0,0,0]);
+  const wl = contrastLevel(whiteRatio), bl = contrastLevel(blackRatio);
+  document.getElementById('contrastWhiteVal').textContent = whiteRatio.toFixed(2)+':1';
+  const whiteBadge = document.getElementById('contrastWhiteBadge');
+  whiteBadge.textContent = wl.label;
+  whiteBadge.className = 'contrast-badge'+(wl.pass?' pass':' fail');
+  document.getElementById('contrastBlackVal').textContent = blackRatio.toFixed(2)+':1';
+  const blackBadge = document.getElementById('contrastBlackBadge');
+  blackBadge.textContent = bl.label;
+  blackBadge.className = 'contrast-badge'+(bl.pass?' pass':' fail');
+}
+
+const STATE_STORAGE_KEY = 'colouristic.wheelState.v1';
+function saveState(){
+  try{
+    const raw = localStorage.getItem(STATE_STORAGE_KEY);
+    const existing = raw ? JSON.parse(raw) : {};
+    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify({...existing, base}));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STATE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function parseHashState(){
+  if(!location.hash) return null;
+  const params = new URLSearchParams(location.hash.slice(1));
+  const h = parseFloat(params.get('h'));
+  const s = parseFloat(params.get('s'));
+  const l = parseFloat(params.get('l'));
+  if([h,s,l].some(v=>Number.isNaN(v))) return null;
+  return { base:{h,s,l} };
+}
+function syncStateToUrl(){
+  const params = new URLSearchParams();
+  params.set('h', Math.round(base.h*10)/10);
+  params.set('s', Math.round(base.s*10)/10);
+  params.set('l', Math.round(base.l*10)/10);
+  history.replaceState(null, '', '#'+params.toString());
+}
+let stateSyncScheduled = false;
+function scheduleStateSync(){
+  if(stateSyncScheduled) return;
+  stateSyncScheduled = true;
+  requestAnimationFrame(()=>{
+    stateSyncScheduled = false;
+    saveState();
+    syncStateToUrl();
+  });
+}
+function restoreState(){
+  const fromHash = parseHashState();
+  const stored = fromHash || loadState();
+  if(!stored || !stored.base) return;
+  if([stored.base.h,stored.base.s,stored.base.l].every(v=>typeof v==='number' && !Number.isNaN(v))){
+    base = {h:stored.base.h, s:stored.base.s, l:stored.base.l};
+    lightSlider.value = Math.round(base.l);
+  }
+}
+
+function onBaseChanged(){
+  updateMarker();
+  updateBaseReadout();
+  scheduleStateSync();
+}
+
+function applyHexInput(){
+  let val = baseHex.value.trim();
+  if(val && val[0] !== '#') val = '#'+val;
+  let normalized = null;
+  if(/^#[0-9a-fA-F]{6}$/.test(val)) normalized = val;
+  else if(/^#[0-9a-fA-F]{3}$/.test(val)) normalized = expandHex3(val);
+  if(!normalized){
+    updateBaseReadout();
+    return;
+  }
+  const r = parseInt(normalized.slice(1,3),16);
+  const g = parseInt(normalized.slice(3,5),16);
+  const b = parseInt(normalized.slice(5,7),16);
+  const hsl = rgbToHsl(r,g,b);
+  base = {h:hsl.h, s:hsl.s, l:hsl.l};
+  lightSlider.value = Math.round(hsl.l);
+  onBaseChanged();
+}
+
+let currentMedium = 'paint';
+
+function rgbToCmyk(r,g,b){
+  const rp=r/255, gp=g/255, bp=b/255;
+  const k = 1-Math.max(rp,gp,bp);
+  if(k>=1) return {c:0,m:0,y:0,k:100};
+  const c=(1-rp-k)/(1-k);
+  const m=(1-gp-k)/(1-k);
+  const y=(1-bp-k)/(1-k);
+  return {c:c*100, m:m*100, y:y*100, k:k*100};
+}
+
+function hueBucketPaint(h){
+  if(h<15||h>=345) return 'a pure red';
+  if(h<45) return 'red with a good amount of yellow mixed in';
+  if(h<70) return 'mostly yellow with a touch of red';
+  if(h<90) return 'a pure yellow';
+  if(h<150) return 'yellow with blue mixed in';
+  if(h<195) return 'a blue-green — mostly blue with a little yellow';
+  if(h<250) return 'a pure blue';
+  if(h<275) return 'blue with red mixed in';
+  if(h<300) return 'a violet — blue and red in roughly equal parts';
+  if(h<330) return 'red with blue mixed in, leaning magenta';
+  return 'red with a touch of blue';
+}
+
+function setBaseFromRgb(r,g,b){
+  const hsl = rgbToHsl(r,g,b);
+  base = {h:hsl.h, s:hsl.s, l:hsl.l};
+  lightSlider.value = Math.round(hsl.l);
+  onBaseChanged();
+}
+
+function cmykToRgb(c,m,y,k){
+  const C=c/100, M=m/100, Y=y/100, K=k/100;
+  return {
+    r: 255*(1-C)*(1-K),
+    g: 255*(1-M)*(1-K),
+    b: 255*(1-Y)*(1-K)
+  };
+}
+
+function setBarFill(id, pct){
+  document.getElementById('fill'+id).style.width = pct+'%';
+  document.getElementById('thumb'+id).style.left = pct+'%';
+  document.getElementById('pct'+id).textContent = Math.round(pct)+'%';
+}
+
+function makeBarDraggable(trackId, onChange){
+  const track = document.getElementById(trackId);
+  let dragging = false;
+  function handle(e){
+    const rect = track.getBoundingClientRect();
+    let x = (e.clientX-rect.left)/rect.width;
+    x = Math.max(0, Math.min(1, x));
+    onChange(x*100);
+  }
+  track.addEventListener('pointerdown', e=>{ dragging=true; track.setPointerCapture(e.pointerId); handle(e); });
+  track.addEventListener('pointermove', e=>{ if(dragging) handle(e); });
+  track.addEventListener('pointerup', ()=>{ dragging=false; });
+}
+
+makeBarDraggable('trackR', pct=>{
+  const [,g,b] = hslToRgb(base.h, base.s, base.l);
+  setBaseFromRgb(Math.round(pct/100*255), g, b);
+});
+makeBarDraggable('trackG', pct=>{
+  const [r,,b] = hslToRgb(base.h, base.s, base.l);
+  setBaseFromRgb(r, Math.round(pct/100*255), b);
+});
+makeBarDraggable('trackB', pct=>{
+  const [r,g] = hslToRgb(base.h, base.s, base.l);
+  setBaseFromRgb(r, g, Math.round(pct/100*255));
+});
+makeBarDraggable('trackC', pct=>{
+  const [r,g,b] = hslToRgb(base.h, base.s, base.l);
+  const cmyk = rgbToCmyk(r,g,b);
+  const rgb = cmykToRgb(pct, cmyk.m, cmyk.y, cmyk.k);
+  setBaseFromRgb(rgb.r, rgb.g, rgb.b);
+});
+makeBarDraggable('trackM', pct=>{
+  const [r,g,b] = hslToRgb(base.h, base.s, base.l);
+  const cmyk = rgbToCmyk(r,g,b);
+  const rgb = cmykToRgb(cmyk.c, pct, cmyk.y, cmyk.k);
+  setBaseFromRgb(rgb.r, rgb.g, rgb.b);
+});
+makeBarDraggable('trackY', pct=>{
+  const [r,g,b] = hslToRgb(base.h, base.s, base.l);
+  const cmyk = rgbToCmyk(r,g,b);
+  const rgb = cmykToRgb(cmyk.c, cmyk.m, pct, cmyk.k);
+  setBaseFromRgb(rgb.r, rgb.g, rgb.b);
+});
+makeBarDraggable('trackK', pct=>{
+  const [r,g,b] = hslToRgb(base.h, base.s, base.l);
+  const cmyk = rgbToCmyk(r,g,b);
+  const rgb = cmykToRgb(cmyk.c, cmyk.m, cmyk.y, pct);
+  setBaseFromRgb(rgb.r, rgb.g, rgb.b);
+});
+
+function updateMixGuide(){
+  const [r,g,b] = hslToRgb(base.h, base.s, base.l);
+  const pct = v=>v/255*100;
+  setBarFill('R', pct(r));
+  setBarFill('G', pct(g));
+  setBarFill('B', pct(b));
+
+  const cmyk = rgbToCmyk(r,g,b);
+  setBarFill('C', cmyk.c);
+  setBarFill('M', cmyk.m);
+  setBarFill('Y', cmyk.y);
+  setBarFill('K', cmyk.k);
+
+  const bucket = hueBucketPaint(base.h);
+  const adjustLines = [];
+  if(base.l > 62) adjustLines.push('Mix in white to lighten it toward this tint.');
+  else if(base.l < 38) adjustLines.push("Mix in a touch of black — or better, its complementary colour — to deepen it toward this shade.");
+  if(base.s < 55) adjustLines.push('Add a small amount of grey, or a touch of the complementary colour, to soften and mute it.');
+  document.getElementById('paintRecipe').textContent = 'Start with '+bucket+', then adjust.';
+  document.getElementById('paintNote').textContent = adjustLines.join(' ')+" These percentages are a printer's-ink breakdown (cyan, magenta, yellow, black). With traditional red/yellow/blue paints, use a cool blue-leaning red and a cool blue in place of magenta and cyan for a closer match. Drag any bar to mix by eye instead.";
+}
+
+document.querySelectorAll('.mix-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentMedium = btn.dataset.medium;
+    document.querySelectorAll('.mix-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('lightBlock').classList.toggle('active', currentMedium==='light');
+    document.getElementById('paintBlock').classList.toggle('active', currentMedium==='paint');
+  });
+});
+document.getElementById('paintBlock').classList.add('active');
+
+function pickFromEvent(clientX, clientY){
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = size/rect.width, scaleY = size/rect.height;
+  const x = (clientX-rect.left)*scaleX;
+  const y = (clientY-rect.top)*scaleY;
+  const dx = x-center, dy = y-center;
+  let dist = Math.sqrt(dx*dx+dy*dy);
+  dist = Math.min(dist, radius);
+  let angle = Math.atan2(dy,dx)*180/Math.PI;
+  angle = (angle+90+360)%360;
+  base.h = angle;
+  base.s = Math.min((dist/radius)*100,100);
+  onBaseChanged();
+}
+
+let dragging=false;
+canvas.addEventListener('pointerdown', e=>{dragging=true; pickFromEvent(e.clientX,e.clientY); canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove', e=>{ if(dragging) pickFromEvent(e.clientX,e.clientY); });
+canvas.addEventListener('pointerup', ()=>{dragging=false;});
+
+canvas.addEventListener('keydown', e=>{
+  const step = e.shiftKey ? 10 : 2;
+  let changed = true;
+  if(e.key==='ArrowLeft') base.h = (base.h - step + 360) % 360;
+  else if(e.key==='ArrowRight') base.h = (base.h + step) % 360;
+  else if(e.key==='ArrowUp') base.s = Math.min(100, base.s + step);
+  else if(e.key==='ArrowDown') base.s = Math.max(0, base.s - step);
+  else changed = false;
+  if(changed){
+    e.preventDefault();
+    onBaseChanged();
+  }
+});
+
+lightSlider.addEventListener('input', e=>{
+  base.l = parseFloat(e.target.value);
+  onBaseChanged();
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+  base.h = Math.random()*360;
+  base.s = 35+Math.random()*55;
+  base.l = 40+Math.random()*30;
+  lightSlider.value = Math.round(base.l);
+  onBaseChanged();
+});
+
+document.getElementById('copyLinkBtn').addEventListener('click', ()=>{
+  syncStateToUrl();
+  navigator.clipboard.writeText(location.href);
+  const btn = document.getElementById('copyLinkBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Copied';
+  setTimeout(()=>{btn.textContent=original;},1200);
+});
+
+restoreState();
+updateMarker();
+updateBaseReadout();
+</script>
+</body>
+</html>

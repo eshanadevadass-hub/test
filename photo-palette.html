@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo palette — Colouristic</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link active" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+  </div>
+
+  <section class="panel face-panel panel-image">
+    <p class="section-title">Palette from a photo</p>
+    <p class="face-intro">Add any photo — a sunset, an outfit, a room, a piece of art — and pull out its dominant colours as a ready-made palette. This also runs entirely in your browser.</p>
+
+    <div class="photo-actions">
+      <label class="iconbtn" for="fileUploadImg">Upload a photo</label>
+      <input type="file" id="fileUploadImg" accept="image/*" hidden>
+      <label class="iconbtn" for="fileCaptureImg">Take a photo</label>
+      <input type="file" id="fileCaptureImg" accept="image/*" capture="environment" hidden>
+      <button class="iconbtn" id="liveCameraBtnImg">Open camera here instead</button>
+    </div>
+
+    <p id="cameraErrorImg" class="camera-error" style="display:none;"></p>
+
+    <div id="cameraStageImg" class="camera-stage" style="display:none;">
+      <video id="cameraVideoImg" class="camera-video" autoplay playsinline muted></video>
+      <div class="camera-controls">
+        <button class="iconbtn" id="snapBtnImg">Capture</button>
+        <button class="iconbtn" id="closeCameraBtnImg">Close camera</button>
+      </div>
+    </div>
+
+    <div id="photoStageImg" class="photo-stage" style="display:none;">
+      <div class="photo-canvas-wrap">
+        <canvas id="photoCanvasImg" class="photo-canvas"></canvas>
+      </div>
+      <div class="slider-row" style="max-width:280px;margin-top:18px;">
+        <div class="slider-label"><span>Number of colours</span><span id="colorCountVal">6</span></div>
+        <input type="range" id="colorCountSlider" min="3" max="8" value="6" step="1">
+      </div>
+      <button class="iconbtn" id="extractBtn" style="margin-top:14px;">Extract palette</button>
+    </div>
+
+    <div id="imagePaletteResults" class="results-stage" style="display:none;">
+      <div class="palette-head">
+        <p class="section-title" style="margin:0;">Extracted palette</p>
+        <div class="actions">
+          <button class="iconbtn" id="imagePaletteExportBtn">Copy as CSS</button>
+          <button class="iconbtn" id="imagePaletteCopyHexBtn">Copy hex list</button>
+        </div>
+      </div>
+      <div class="palette" id="imagePaletteGrid"></div>
+      <p class="hint">Sorted by how much of the photo each colour covers. Click a swatch to explore it further on the colour wheel.</p>
+      <div id="imagePaletteExportRow"></div>
+    </div>
+  </section>
+</div>
+
+<script src="shared.js"></script>
+<script>
+const fileUploadImg = document.getElementById('fileUploadImg');
+const fileCaptureImg = document.getElementById('fileCaptureImg');
+const liveCameraBtnImg = document.getElementById('liveCameraBtnImg');
+const cameraStageImg = document.getElementById('cameraStageImg');
+const cameraVideoImg = document.getElementById('cameraVideoImg');
+const snapBtnImg = document.getElementById('snapBtnImg');
+const closeCameraBtnImg = document.getElementById('closeCameraBtnImg');
+const cameraErrorImg = document.getElementById('cameraErrorImg');
+const photoStageImg = document.getElementById('photoStageImg');
+const photoCanvasImg = document.getElementById('photoCanvasImg');
+const photoCtxImg = photoCanvasImg.getContext('2d');
+const colorCountSlider = document.getElementById('colorCountSlider');
+const colorCountVal = document.getElementById('colorCountVal');
+const extractBtn = document.getElementById('extractBtn');
+const imagePaletteResults = document.getElementById('imagePaletteResults');
+const imagePaletteGrid = document.getElementById('imagePaletteGrid');
+const imagePaletteExportBtn = document.getElementById('imagePaletteExportBtn');
+const imagePaletteCopyHexBtn = document.getElementById('imagePaletteCopyHexBtn');
+
+let cameraStreamImg = null;
+let lastExtracted = [];
+
+function loadImageFileImg(file){
+  if(!file) return;
+  const img = new Image();
+  img.onload = ()=>{
+    const maxW = 360;
+    const scale = Math.min(1, maxW/img.width);
+    const w = Math.round(img.width*scale);
+    const h = Math.round(img.height*scale);
+    photoCanvasImg.width = w;
+    photoCanvasImg.height = h;
+    photoCtxImg.drawImage(img,0,0,w,h);
+    photoStageImg.style.display='block';
+    imagePaletteResults.style.display='none';
+    stopCameraImg();
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+fileUploadImg.addEventListener('change', e=> loadImageFileImg(e.target.files[0]));
+fileCaptureImg.addEventListener('change', e=> loadImageFileImg(e.target.files[0]));
+
+liveCameraBtnImg.addEventListener('click', async ()=>{
+  cameraErrorImg.style.display='none';
+  try{
+    cameraStreamImg = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    cameraVideoImg.srcObject = cameraStreamImg;
+    cameraStageImg.style.display='block';
+  }catch(err){
+    cameraErrorImg.textContent = "Couldn't open the camera here — your browser may be blocking it for this page. Try “Take a photo” instead, which uses your device's own camera app.";
+    cameraErrorImg.style.display='block';
+  }
+});
+
+snapBtnImg.addEventListener('click', ()=>{
+  const vw = cameraVideoImg.videoWidth, vh = cameraVideoImg.videoHeight;
+  if(!vw) return;
+  const maxW = 360;
+  const scale = Math.min(1,maxW/vw);
+  const w = Math.round(vw*scale), h = Math.round(vh*scale);
+  photoCanvasImg.width = w; photoCanvasImg.height = h;
+  photoCtxImg.drawImage(cameraVideoImg,0,0,w,h);
+  photoStageImg.style.display='block';
+  imagePaletteResults.style.display='none';
+  stopCameraImg();
+});
+
+closeCameraBtnImg.addEventListener('click', stopCameraImg);
+
+function stopCameraImg(){
+  if(cameraStreamImg){
+    cameraStreamImg.getTracks().forEach(t=>t.stop());
+    cameraStreamImg=null;
+  }
+  cameraStageImg.style.display='none';
+}
+
+colorCountSlider.addEventListener('input', e=>{
+  colorCountVal.textContent = e.target.value;
+});
+
+function distSq(a,b){
+  const dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2];
+  return dr*dr+dg*dg+db*db;
+}
+
+function kmeansPalette(pixels, k){
+  k = Math.min(k, pixels.length);
+  let centroids = [pixels[Math.floor(Math.random()*pixels.length)]];
+  while(centroids.length < k){
+    const dists = pixels.map(p=>{
+      let minD = Infinity;
+      for(const c of centroids){ const d=distSq(p,c); if(d<minD) minD=d; }
+      return minD;
+    });
+    const sum = dists.reduce((a,b)=>a+b,0);
+    if(sum===0){ centroids.push(pixels[Math.floor(Math.random()*pixels.length)]); continue; }
+    let r = Math.random()*sum, idx=0;
+    for(;idx<dists.length-1;idx++){ r-=dists[idx]; if(r<=0) break; }
+    centroids.push(pixels[idx]);
+  }
+  let assignments = new Array(pixels.length).fill(0);
+  for(let iter=0; iter<10; iter++){
+    for(let i=0;i<pixels.length;i++){
+      let best=0, bestD=Infinity;
+      for(let c=0;c<centroids.length;c++){
+        const d = distSq(pixels[i], centroids[c]);
+        if(d<bestD){bestD=d;best=c;}
+      }
+      assignments[i]=best;
+    }
+    const sums = centroids.map(()=>[0,0,0,0]);
+    for(let i=0;i<pixels.length;i++){
+      const c = assignments[i];
+      sums[c][0]+=pixels[i][0]; sums[c][1]+=pixels[i][1]; sums[c][2]+=pixels[i][2]; sums[c][3]++;
+    }
+    centroids = centroids.map((old,c)=> sums[c][3]>0 ? [sums[c][0]/sums[c][3], sums[c][1]/sums[c][3], sums[c][2]/sums[c][3]] : old);
+  }
+  const counts = centroids.map((_,c)=>0);
+  assignments.forEach(a=>counts[a]++);
+  const total = pixels.length;
+  return centroids
+    .map((c,i)=>({r:c[0],g:c[1],b:c[2],pct:counts[i]/total}))
+    .filter(c=>c.pct>0)
+    .sort((a,b)=>b.pct-a.pct);
+}
+
+function extractFromCanvas(canvas, k){
+  const maxDim = 90;
+  const scale = Math.min(1, maxDim/Math.max(canvas.width,canvas.height));
+  const w = Math.max(1,Math.round(canvas.width*scale));
+  const h = Math.max(1,Math.round(canvas.height*scale));
+  const tmp = document.createElement('canvas');
+  tmp.width=w; tmp.height=h;
+  const tctx = tmp.getContext('2d');
+  tctx.drawImage(canvas,0,0,w,h);
+  const data = tctx.getImageData(0,0,w,h).data;
+  const pixels = [];
+  for(let i=0;i<data.length;i+=4){
+    if(data[i+3]<128) continue;
+    pixels.push([data[i],data[i+1],data[i+2]]);
+  }
+  return kmeansPalette(pixels, k);
+}
+
+function buildImagePalette(colors){
+  imagePaletteGrid.innerHTML='';
+  colors.forEach(c=>{
+    const hex = '#'+[c.r,c.g,c.b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+    const hsl = rgbToHsl(c.r,c.g,c.b);
+    const card = document.createElement('div');
+    card.className='swatch';
+    const colorDiv = document.createElement('div');
+    colorDiv.className='swatch-color cvd-target';
+    colorDiv.style.background=hex;
+    colorDiv.title = 'Click to explore this colour on the colour wheel';
+    colorDiv.addEventListener('click', ()=>{
+      const params = new URLSearchParams({h:hsl.h.toFixed(1), s:hsl.s.toFixed(1), l:hsl.l.toFixed(1)});
+      location.href = 'index.html#'+params.toString();
+    });
+    const info = document.createElement('div');
+    info.className='swatch-info';
+    const hexLabel = document.createElement('p');
+    hexLabel.className='swatch-hex';
+    hexLabel.textContent = hex.toUpperCase();
+    const pctLabel = document.createElement('p');
+    pctLabel.className='swatch-role';
+    pctLabel.textContent = Math.round(c.pct*100)+'% of photo';
+    info.appendChild(hexLabel);
+    info.appendChild(pctLabel);
+    card.appendChild(colorDiv);
+    card.appendChild(info);
+    imagePaletteGrid.appendChild(card);
+  });
+}
+
+extractBtn.addEventListener('click', ()=>{
+  const k = parseInt(colorCountSlider.value,10);
+  lastExtracted = extractFromCanvas(photoCanvasImg, k);
+  buildImagePalette(lastExtracted);
+  imagePaletteResults.style.display='block';
+  imagePaletteResults.scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+imagePaletteExportBtn.addEventListener('click', ()=>{
+  if(!lastExtracted.length) return;
+  const hexes = lastExtracted.map(c=>'#'+[c.r,c.g,c.b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase());
+  const css = ':root {\n' + hexes.map((hex,i)=>`  --color-${i+1}: ${hex};`).join('\n') + '\n}';
+  navigator.clipboard.writeText(css);
+  const original = imagePaletteExportBtn.textContent;
+  imagePaletteExportBtn.textContent = 'Copied';
+  setTimeout(()=>{imagePaletteExportBtn.textContent=original;},1200);
+});
+
+imagePaletteCopyHexBtn.addEventListener('click', ()=>{
+  if(!lastExtracted.length) return;
+  const hexes = lastExtracted.map(c=>'#'+[c.r,c.g,c.b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('').toUpperCase());
+  navigator.clipboard.writeText(hexes.join(', '));
+  const original = imagePaletteCopyHexBtn.textContent;
+  imagePaletteCopyHexBtn.textContent = 'Copied';
+  setTimeout(()=>{imagePaletteCopyHexBtn.textContent=original;},1200);
+});
+
+attachExportButtons('imagePaletteExportRow', 'imagePaletteGrid', 'colouristic-photo-palette', 'Colouristic photo palette', 'Photo palette');
+</script>
+</body>
+</html>

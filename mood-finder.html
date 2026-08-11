@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mood finder — Colouristic</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link active" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+  </div>
+
+  <div class="panel panel-mood">
+    <p class="section-title">Pick a mood</p>
+    <p class="hint" style="margin-top:0;margin-bottom:14px;">Choose a feeling, and we'll show a palette built to convey it — plus why it works.</p>
+    <div class="harmony-grid" id="moodGrid"></div>
+    <div id="moodResult" style="display:none;margin-top:18px;">
+      <p class="hint" id="moodDesc" style="margin-top:0;margin-bottom:14px;"></p>
+      <div class="palette" id="moodPaletteGrid"></div>
+      <div id="moodPaletteExportRow"></div>
+    </div>
+
+    <p class="section-title" style="margin-top:32px;">Or pick a colour to see its mood</p>
+    <p class="hint" style="margin-top:0;margin-bottom:14px;">Drag the wheel — the explanation updates as you go.</p>
+    <div class="mini-wheel-row">
+      <div class="wheel-wrap" style="width:160px;height:160px;">
+        <canvas id="moodWheelCanvas" width="160" height="160" tabindex="0" class="cvd-target"></canvas>
+        <div id="moodWheelMarker"></div>
+      </div>
+      <div class="mini-wheel-side">
+        <div class="slider-row">
+          <div class="slider-label"><span>Lightness</span><span id="moodWheelLightVal">55%</span></div>
+          <input type="range" id="moodWheelLightSlider" min="10" max="90" value="55" step="1">
+        </div>
+        <div class="base-readout" style="border-top:none;padding-top:0;">
+          <div class="base-swatch cvd-target" id="moodColourSwatch"></div>
+          <div class="base-codes">
+            <div id="moodColourHex">#000000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="mix-recipe" id="moodColourDesc" style="margin-top:14px;"></p>
+
+    <p class="section-title" style="margin-top:32px;">Build a palette from your own base colours</p>
+    <p class="hint" style="margin-top:0;margin-bottom:14px;">Pick up to 3 base colours — we'll fill in the rest of the palette to complement them.</p>
+    <div class="mini-wheel-row">
+      <div class="wheel-wrap" style="width:160px;height:160px;">
+        <canvas id="baseWheelCanvas" width="160" height="160" tabindex="0" class="cvd-target"></canvas>
+        <div id="baseWheelMarker"></div>
+      </div>
+      <div class="mini-wheel-side">
+        <div class="slider-row">
+          <div class="slider-label"><span>Lightness</span><span id="baseWheelLightVal">55%</span></div>
+          <input type="range" id="baseWheelLightSlider" min="10" max="90" value="55" step="1">
+        </div>
+        <div class="actions" id="baseSlots">
+          <button class="iconbtn active-slot" data-slot="0" type="button">+ Base colour 1</button>
+          <button class="iconbtn" data-slot="1" type="button">+ Base colour 2</button>
+          <button class="iconbtn" data-slot="2" type="button">+ Base colour 3</button>
+        </div>
+        <div class="actions">
+          <button class="iconbtn" id="clearActiveSlotBtn" type="button">Clear this slot</button>
+          <button class="iconbtn" id="generateBasePaletteBtn" type="button">Generate palette</button>
+        </div>
+      </div>
+    </div>
+    <div class="palette" id="basePaletteGrid" style="margin-top:14px;"></div>
+    <p class="hint" id="basePaletteHint" style="display:none;margin-top:14px;">Click a swatch to copy its hex.</p>
+    <div id="basePaletteExportRow"></div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+
+/* ---- Mood -> Colours ---- */
+const MOODS = [
+  { id:'calm', name:'Calm', desc:"Soft, low-saturation blues and greens slow the eye down and read as safe, restful, and unhurried.", colors:[
+    {h:205,s:35,l:75},{h:190,s:30,l:65},{h:170,s:25,l:70},{h:210,s:20,l:88},{h:200,s:40,l:35}
+  ]},
+  { id:'energetic', name:'Energetic', desc:"High-saturation warm hues push forward visually and read as fast, exciting, and hard to ignore.", colors:[
+    {h:10,s:85,l:55},{h:35,s:90,l:55},{h:50,s:90,l:55},{h:330,s:80,l:55},{h:0,s:0,l:12}
+  ]},
+  { id:'romantic', name:'Romantic', desc:"Pinks and warm reds, softened with lightness, read as tender and intimate rather than aggressive.", colors:[
+    {h:340,s:55,l:80},{h:350,s:60,l:65},{h:0,s:45,l:45},{h:30,s:40,l:75},{h:320,s:30,l:30}
+  ]},
+  { id:'professional', name:'Professional', desc:"Cool, low-saturation blues and greys are the most universally 'trustworthy' combination in colour psychology.", colors:[
+    {h:215,s:45,l:30},{h:215,s:15,l:55},{h:210,s:10,l:85},{h:200,s:60,l:20},{h:0,s:0,l:20}
+  ]},
+  { id:'playful', name:'Playful', desc:"A wide hue spread at high saturation feels chaotic in a good way — youthful, fun, and unpredictable.", colors:[
+    {h:50,s:85,l:60},{h:190,s:75,l:55},{h:330,s:75,l:60},{h:270,s:65,l:60},{h:130,s:70,l:50}
+  ]},
+  { id:'mysterious', name:'Mysterious', desc:"Deep, low-lightness purples and near-blacks with a cool undertone withhold information and invite curiosity.", colors:[
+    {h:270,s:40,l:20},{h:280,s:60,l:12},{h:250,s:30,l:10},{h:300,s:25,l:30},{h:0,s:0,l:6}
+  ]},
+  { id:'cozy', name:'Cozy', desc:"Warm, earthy mid-tones — terracotta, mustard, brown — read as tactile, comforting, and grounded.", colors:[
+    {h:20,s:55,l:45},{h:35,s:60,l:50},{h:25,s:35,l:25},{h:40,s:30,l:80},{h:15,s:20,l:15}
+  ]},
+  { id:'fresh', name:'Fresh', desc:"Light, clean greens and blues with high lightness and moderate saturation read as new and revitalizing.", colors:[
+    {h:150,s:50,l:70},{h:190,s:55,l:65},{h:60,s:45,l:80},{h:0,s:0,l:95},{h:170,s:40,l:40}
+  ]},
+  { id:'luxurious', name:'Luxurious', desc:"Deep jewel tones paired with gold read as premium — saturation and depth signal richness and rarity.", colors:[
+    {h:150,s:60,l:20},{h:340,s:60,l:20},{h:45,s:55,l:55},{h:0,s:0,l:8},{h:270,s:40,l:25}
+  ]},
+  { id:'melancholic', name:'Melancholic', desc:"Desaturated, cool mid-tones — faded blues and greys — read as quiet and reflective rather than sad outright.", colors:[
+    {h:220,s:15,l:55},{h:210,s:10,l:40},{h:200,s:8,l:70},{h:230,s:20,l:25},{h:0,s:0,l:60}
+  ]}
+];
+
+const moodGrid = document.getElementById('moodGrid');
+MOODS.forEach(m=>{
+  const btn = document.createElement('button');
+  btn.className = 'harmony-btn';
+  btn.innerHTML = m.name+'<span class="n">'+m.colors.length+' colours</span>';
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#moodGrid .harmony-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('moodDesc').textContent = m.desc;
+    const grid = document.getElementById('moodPaletteGrid');
+    grid.innerHTML = '';
+    m.colors.forEach(c=>{
+      grid.appendChild(makeSwatchCard(hslToHex(c.h,c.s,c.l), null));
+    });
+    document.getElementById('moodResult').style.display='block';
+  });
+  moodGrid.appendChild(btn);
+});
+
+/* ---- Colour -> Mood ---- */
+const moodWheelCanvas = document.getElementById('moodWheelCanvas');
+const moodWheelCtx = moodWheelCanvas.getContext('2d');
+const moodWheelSize=160, moodWheelCenter=80, moodWheelRadius=76;
+const moodWheelMarker = document.getElementById('moodWheelMarker');
+const moodWheelLightSlider = document.getElementById('moodWheelLightSlider');
+const moodWheelLightVal = document.getElementById('moodWheelLightVal');
+const moodColourSwatch = document.getElementById('moodColourSwatch');
+const moodColourHex = document.getElementById('moodColourHex');
+const moodColourDesc = document.getElementById('moodColourDesc');
+
+paintStaticWheel(moodWheelCtx, moodWheelSize);
+
+let moodColour = {h:265, s:55, l:55};
+
+function describeColourMood(h,s,l){
+  let base;
+  if(h<15||h>=345) base = {name:'red', emotion:"passion, energy, and urgency — it draws the eye first and can feel bold or even alarming in large doses"};
+  else if(h<45) base = {name:'orange', emotion:"warmth, enthusiasm, and friendliness — energetic without red's intensity"};
+  else if(h<70) base = {name:'yellow', emotion:"optimism, happiness, and attention — the most visible hue to the eye, though it can tip into anxious or overwhelming at high saturation"};
+  else if(h<170) base = {name:'green', emotion:"growth, balance, and calm — associated with nature and often read as safe or restorative"};
+  else if(h<200) base = {name:'teal', emotion:"clarity and freshness — a calm, modern hue that blends blue's trust with green's balance"};
+  else if(h<255) base = {name:'blue', emotion:"trust, calm, and stability — the most universally ‘safe’ colour, though it can read as cold or distant"};
+  else if(h<290) base = {name:'purple', emotion:"luxury, creativity, and mystery — historically rare and expensive, it still reads as premium or unconventional"};
+  else if(h<330) base = {name:'magenta', emotion:"playfulness and confidence — a bold, attention-grabbing hue that mixes red's energy with purple's individuality"};
+  else base = {name:'pink', emotion:"romance, gentleness, and warmth — softer and more approachable than red"};
+
+  let satPhrase;
+  if(s>=70) satPhrase = 'At this saturation it reads as bold and vivid — confident, energetic, hard to ignore.';
+  else if(s>=35) satPhrase = 'At this saturation it feels balanced — present without shouting.';
+  else satPhrase = 'At this saturation it reads as muted and sophisticated — calmer than the pure hue.';
+
+  let lightPhrase;
+  if(l>=75) lightPhrase = 'Its lightness keeps it airy and gentle, more of a whisper than a statement.';
+  else if(l>=45) lightPhrase = 'Its mid-range lightness keeps it grounded and approachable.';
+  else lightPhrase = 'Its depth adds weight and drama — more serious, formal, or moody.';
+
+  return 'A '+base.name+' like this generally conveys '+base.emotion+'. '+satPhrase+' '+lightPhrase;
+}
+
+function updateMoodWheelMarker(){
+  const rad=(moodColour.h-90)*Math.PI/180;
+  const dist=(moodColour.s/100)*moodWheelRadius;
+  moodWheelMarker.style.left=(moodWheelCenter+dist*Math.cos(rad))+'px';
+  moodWheelMarker.style.top=(moodWheelCenter+dist*Math.sin(rad))+'px';
+}
+
+function updateMoodColourReadout(){
+  const hex = hslToHex(moodColour.h, moodColour.s, moodColour.l);
+  moodColourSwatch.style.background = hex;
+  moodColourHex.textContent = hex.toUpperCase();
+  moodWheelLightSlider.value = Math.round(moodColour.l);
+  moodWheelLightVal.textContent = Math.round(moodColour.l)+'%';
+  moodColourDesc.textContent = describeColourMood(moodColour.h, moodColour.s, moodColour.l);
+  updateMoodWheelMarker();
+}
+
+function pickMoodFromEvent(clientX, clientY){
+  const rect = moodWheelCanvas.getBoundingClientRect();
+  const scaleX = moodWheelSize/rect.width, scaleY = moodWheelSize/rect.height;
+  const x=(clientX-rect.left)*scaleX, y=(clientY-rect.top)*scaleY;
+  const dx=x-moodWheelCenter, dy=y-moodWheelCenter;
+  let dist=Math.sqrt(dx*dx+dy*dy);
+  dist=Math.min(dist,moodWheelRadius);
+  let angle=Math.atan2(dy,dx)*180/Math.PI;
+  angle=(angle+90+360)%360;
+  moodColour.h = angle;
+  moodColour.s = Math.min((dist/moodWheelRadius)*100,100);
+  updateMoodColourReadout();
+}
+
+let moodDragging=false;
+moodWheelCanvas.addEventListener('pointerdown', e=>{ moodDragging=true; pickMoodFromEvent(e.clientX,e.clientY); moodWheelCanvas.setPointerCapture(e.pointerId); });
+moodWheelCanvas.addEventListener('pointermove', e=>{ if(moodDragging) pickMoodFromEvent(e.clientX,e.clientY); });
+moodWheelCanvas.addEventListener('pointerup', ()=>{ moodDragging=false; });
+moodWheelCanvas.addEventListener('keydown', e=>{
+  const step=e.shiftKey?10:2;
+  let changed=true;
+  if(e.key==='ArrowLeft') moodColour.h=(moodColour.h-step+360)%360;
+  else if(e.key==='ArrowRight') moodColour.h=(moodColour.h+step)%360;
+  else if(e.key==='ArrowUp') moodColour.s=Math.min(100,moodColour.s+step);
+  else if(e.key==='ArrowDown') moodColour.s=Math.max(0,moodColour.s-step);
+  else changed=false;
+  if(changed){ e.preventDefault(); updateMoodColourReadout(); }
+});
+moodWheelLightSlider.addEventListener('input', e=>{
+  moodColour.l = parseFloat(e.target.value);
+  updateMoodColourReadout();
+});
+
+updateMoodColourReadout();
+
+/* ---- Build palette from up to 3 base colours ---- */
+const baseWheelCanvas = document.getElementById('baseWheelCanvas');
+const baseWheelCtx = baseWheelCanvas.getContext('2d');
+const baseWheelSize=160, baseWheelCenter=80, baseWheelRadius=76;
+const baseWheelMarker = document.getElementById('baseWheelMarker');
+const baseWheelLightSlider = document.getElementById('baseWheelLightSlider');
+const baseWheelLightVal = document.getElementById('baseWheelLightVal');
+
+paintStaticWheel(baseWheelCtx, baseWheelSize);
+
+let baseSlots = [null, null, null];
+let activeSlot = 0;
+let baseWheelColour = {h:265, s:55, l:55};
+
+function renderSlots(){
+  document.querySelectorAll('#baseSlots button').forEach((btn,i)=>{
+    const c = baseSlots[i];
+    if(c){
+      const hex = hslToHex(c.h,c.s,c.l);
+      btn.style.background = hex;
+      btn.style.color = c.l>55 ? '#1a1822' : '#f2efe9';
+      btn.style.borderColor = hex;
+      btn.textContent = 'Base '+(i+1)+': '+hex.toUpperCase();
+    } else {
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+      btn.textContent = '+ Base colour '+(i+1);
+    }
+    btn.classList.toggle('active-slot', i===activeSlot);
+  });
+}
+
+function updateBaseWheelMarker(){
+  const rad=(baseWheelColour.h-90)*Math.PI/180;
+  const dist=(baseWheelColour.s/100)*baseWheelRadius;
+  baseWheelMarker.style.left=(baseWheelCenter+dist*Math.cos(rad))+'px';
+  baseWheelMarker.style.top=(baseWheelCenter+dist*Math.sin(rad))+'px';
+}
+
+function commitActiveSlot(){
+  baseSlots[activeSlot] = {...baseWheelColour};
+  renderSlots();
+}
+
+function pickBaseFromEvent(clientX, clientY){
+  const rect = baseWheelCanvas.getBoundingClientRect();
+  const scaleX = baseWheelSize/rect.width, scaleY = baseWheelSize/rect.height;
+  const x=(clientX-rect.left)*scaleX, y=(clientY-rect.top)*scaleY;
+  const dx=x-baseWheelCenter, dy=y-baseWheelCenter;
+  let dist=Math.sqrt(dx*dx+dy*dy);
+  dist=Math.min(dist,baseWheelRadius);
+  let angle=Math.atan2(dy,dx)*180/Math.PI;
+  angle=(angle+90+360)%360;
+  baseWheelColour.h = angle;
+  baseWheelColour.s = Math.min((dist/baseWheelRadius)*100,100);
+  updateBaseWheelMarker();
+  commitActiveSlot();
+}
+
+let baseDragging=false;
+baseWheelCanvas.addEventListener('pointerdown', e=>{ baseDragging=true; pickBaseFromEvent(e.clientX,e.clientY); baseWheelCanvas.setPointerCapture(e.pointerId); });
+baseWheelCanvas.addEventListener('pointermove', e=>{ if(baseDragging) pickBaseFromEvent(e.clientX,e.clientY); });
+baseWheelCanvas.addEventListener('pointerup', ()=>{ baseDragging=false; });
+baseWheelCanvas.addEventListener('keydown', e=>{
+  const step=e.shiftKey?10:2;
+  let changed=true;
+  if(e.key==='ArrowLeft') baseWheelColour.h=(baseWheelColour.h-step+360)%360;
+  else if(e.key==='ArrowRight') baseWheelColour.h=(baseWheelColour.h+step)%360;
+  else if(e.key==='ArrowUp') baseWheelColour.s=Math.min(100,baseWheelColour.s+step);
+  else if(e.key==='ArrowDown') baseWheelColour.s=Math.max(0,baseWheelColour.s-step);
+  else changed=false;
+  if(changed){ e.preventDefault(); updateBaseWheelMarker(); commitActiveSlot(); }
+});
+baseWheelLightSlider.addEventListener('input', e=>{
+  baseWheelColour.l = parseFloat(e.target.value);
+  baseWheelLightVal.textContent = Math.round(baseWheelColour.l)+'%';
+  commitActiveSlot();
+});
+
+document.querySelectorAll('#baseSlots button').forEach((btn,i)=>{
+  btn.addEventListener('click', ()=>{
+    activeSlot = i;
+    const c = baseSlots[i];
+    if(c){
+      baseWheelColour = {...c};
+      updateBaseWheelMarker();
+      baseWheelLightSlider.value = Math.round(c.l);
+      baseWheelLightVal.textContent = Math.round(c.l)+'%';
+    }
+    renderSlots();
+  });
+});
+
+document.getElementById('clearActiveSlotBtn').addEventListener('click', ()=>{
+  baseSlots[activeSlot] = null;
+  renderSlots();
+});
+
+function circularMeanHue(hues){
+  let sumSin=0, sumCos=0;
+  hues.forEach(h=>{
+    const rad=h*Math.PI/180;
+    sumSin+=Math.sin(rad);
+    sumCos+=Math.cos(rad);
+  });
+  let mean = Math.atan2(sumSin,sumCos)*180/Math.PI;
+  if(mean<0) mean+=360;
+  return mean;
+}
+
+function buildComplementaryPalette(bases){
+  const n = bases.length;
+  const anchorHue = circularMeanHue(bases.map(b=>b.h));
+  const avgSat = bases.reduce((a,b)=>a+b.s,0)/n;
+  const avgL = bases.reduce((a,b)=>a+b.l,0)/n;
+  const palette = bases.map(b=>({h:b.h, s:b.s, l:b.l, role:'base'}));
+
+  if(n===1){
+    const h = bases[0].h;
+    palette.push({h:(h+180)%360, s:avgSat, l:avgL, role:'complement'});
+    palette.push({h:(h+150)%360, s:clamp(avgSat*0.85,10,90), l:clamp(avgL+10,15,88), role:'accent'});
+    palette.push({h:(h+30)%360, s:clamp(avgSat*0.7,10,90), l:clamp(avgL-8,15,85), role:'accent'});
+    palette.push({h, s:clamp(avgSat*0.25,8,30), l:88, role:'tint'});
+    palette.push({h, s:clamp(avgSat*0.3,8,35), l:18, role:'shade'});
+  } else if(n===2){
+    palette.push({h:anchorHue, s:clamp(avgSat*0.6,15,55), l:clamp(avgL+5,25,70), role:'bridge'});
+    palette.push({h:anchorHue, s:clamp(avgSat*0.2,5,25), l:90, role:'tint'});
+    palette.push({h:anchorHue, s:clamp(avgSat*0.25,5,30), l:16, role:'shade'});
+    palette.push({h:(bases[0].h+180)%360, s:clamp(avgSat*0.5,10,80), l:avgL, role:'accent'});
+  } else {
+    palette.push({h:anchorHue, s:clamp(avgSat*0.2,5,25), l:90, role:'tint'});
+    palette.push({h:anchorHue, s:clamp(avgSat*0.25,5,30), l:16, role:'shade'});
+    palette.push({h:anchorHue, s:clamp(avgSat*0.5,15,50), l:clamp(avgL,25,70), role:'bridge'});
+  }
+  return palette.slice(0,6);
+}
+
+document.getElementById('generateBasePaletteBtn').addEventListener('click', ()=>{
+  const bases = baseSlots.filter(Boolean);
+  if(!bases.length){
+    alert('Pick at least one base colour first — click a slot, then drag the wheel.');
+    return;
+  }
+  const palette = buildComplementaryPalette(bases);
+  const grid = document.getElementById('basePaletteGrid');
+  grid.innerHTML = '';
+  palette.forEach(c=>{
+    grid.appendChild(makeSwatchCard(hslToHex(c.h,c.s,c.l), c.role));
+  });
+  document.getElementById('basePaletteHint').style.display='block';
+});
+
+attachExportButtons('moodPaletteExportRow', 'moodPaletteGrid', 'colouristic-mood-palette', 'Colouristic mood palette', 'Mood palette');
+attachExportButtons('basePaletteExportRow', 'basePaletteGrid', 'colouristic-base-palette', 'Colouristic palette from base colours', 'Base palette');
+
+renderSlots();
+updateBaseWheelMarker();
+</script>
+</body>
+</html>
