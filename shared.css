@@ -280,6 +280,12 @@ input[type=range]::-moz-range-thumb{
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
   gap:12px;
 }
+.palette.palette-proportion{
+  display:flex;
+  flex-wrap:wrap;
+}
+.palette.palette-proportion .swatch{min-width:64px;}
+.palette.palette-proportion .swatch-color{height:110px;}
 .swatch{
   border-radius:12px;
   overflow:hidden;

@@ -74,6 +74,18 @@ function injectCvdFilters(){
         + '<filter id="cvd-tritanopia" color-interpolation-filters="sRGB">'
           + '<feColorMatrix type="matrix" values="0.950 0.050 0.000 0 0 0.000 0.433 0.567 0 0 0.000 0.475 0.525 0 0 0 0 0 1 0"/>'
         + '</filter>'
+        /* Lighting preview: a per-channel gain (diagonal matrix), like a simplified camera white-balance shift.
+           Not a spectral render — just an honest approximation of how each light source's colour temperature
+           pushes RGB relative to the sRGB (D65, ~6500K) reference white this app otherwise assumes. */
+        + '<filter id="light-warm" color-interpolation-filters="sRGB">'
+          + '<feColorMatrix type="matrix" values="1.20 0 0 0 0 0 1.00 0 0 0 0 0 0.65 0 0 0 0 0 1 0"/>'
+        + '</filter>'
+        + '<filter id="light-daylight" color-interpolation-filters="sRGB">'
+          + '<feColorMatrix type="matrix" values="1.05 0 0 0 0 0 1.00 0 0 0 0 0 0.90 0 0 0 0 0 1 0"/>'
+        + '</filter>'
+        + '<filter id="light-cool" color-interpolation-filters="sRGB">'
+          + '<feColorMatrix type="matrix" values="0.78 0 0 0 0 0 0.95 0 0 0 0 0 1.25 0 0 0 0 0 1 0"/>'
+        + '</filter>'
       + '</defs>'
     + '</svg>';
   document.body.insertBefore(wrapper.firstElementChild, document.body.firstChild);
@@ -81,12 +93,15 @@ function injectCvdFilters(){
 
 const CVD_STORAGE_KEY = 'colouristic.cvdPreview.v1';
 const GRAYSCALE_STORAGE_KEY = 'colouristic.grayscalePreview.v1';
+const LIGHTING_STORAGE_KEY = 'colouristic.lightingPreview.v1';
 let currentCvdMode = 'none';
 let currentGrayscale = false;
+let currentLightingMode = 'none';
 
 function updatePreviewFilter(){
   const parts = [];
   if(currentCvdMode!=='none') parts.push('url(#cvd-'+currentCvdMode+')');
+  if(currentLightingMode!=='none') parts.push('url(#light-'+currentLightingMode+')');
   if(currentGrayscale) parts.push('grayscale(1)');
   document.documentElement.style.setProperty('--preview-filter', parts.length ? parts.join(' ') : 'none');
 }
@@ -125,6 +140,24 @@ function initGrayscaleControl(){
     btn.classList.toggle('active', isOn);
     applyGrayscaleMode(isOn);
     try{ localStorage.setItem(GRAYSCALE_STORAGE_KEY, isOn ? '1' : '0'); }catch(e){}
+  });
+}
+
+function applyLightingMode(mode){
+  currentLightingMode = mode;
+  updatePreviewFilter();
+}
+function initLightingControl(){
+  const sel = document.getElementById('lightingSelect');
+  if(!sel) return;
+  let saved = 'none';
+  try{ saved = localStorage.getItem(LIGHTING_STORAGE_KEY) || 'none'; }catch(e){}
+  sel.value = saved;
+  applyLightingMode(saved);
+  sel.addEventListener('change', e=>{
+    const mode = e.target.value;
+    applyLightingMode(mode);
+    try{ localStorage.setItem(LIGHTING_STORAGE_KEY, mode); }catch(e){}
   });
 }
 
@@ -442,3 +475,4 @@ function attachExportButtons(containerId, gridId, filenameBase, pdfTitle, defaul
 injectCvdFilters();
 initCvdControl();
 initGrayscaleControl();
+initLightingControl();

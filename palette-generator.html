@@ -34,6 +34,13 @@
       <option value="tritanopia">Tritanopia</option>
     </select>
     <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+    <label for="lightingSelect" class="cvd-label" style="margin-left:4px;">Lighting</label>
+    <select id="lightingSelect" class="cvd-select" title="Approximate colour-temperature tint — a simplified per-channel simulation, not a full spectral render.">
+      <option value="none">Off</option>
+      <option value="warm">Warm (~2700K)</option>
+      <option value="daylight">Daylight (~5500K)</option>
+      <option value="cool">Cool (~9000K)</option>
+    </select>
   </div>
 
   <div class="panel panel-harmony">
@@ -210,6 +217,8 @@ function applyHexInput(){
   buildPalette();
 }
 
+function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+
 const HARMONIES = [
   { id:'complementary', name:'Complementary', desc:'2 colours', offsets:[0,180] },
   { id:'analogous', name:'Analogous', desc:'5 colours', offsets:[-30,-15,0,15,30] },
@@ -218,6 +227,7 @@ const HARMONIES = [
   { id:'tetradic', name:'Tetradic', desc:'4 colours', offsets:[0,60,180,240] },
   { id:'square', name:'Square', desc:'4 colours', offsets:[0,90,180,270] },
   { id:'mono', name:'Monochromatic', desc:'5 tones', offsets:[0,0,0,0,0], monoLights:[20,35,50,65,80] },
+  { id:'sixty-thirty-ten', name:'60-30-10', desc:'By proportion, not hue', proportions:[60,30,10] },
 ];
 
 let currentHarmony = HARMONIES[2];
@@ -241,6 +251,19 @@ HARMONIES.forEach(h=>{
 const paletteGrid = document.getElementById('paletteGrid');
 
 function computeHarmonyColors(){
+  if(currentHarmony.proportions){
+    // Dominant: the base colour, as-is. Secondary: a softer neighbouring hue that supports
+    // without competing. Accent: a bold complement, used sparingly at 10%.
+    const roles = [
+      { h: base.h, s: base.s, l: base.l },
+      { h: (base.h+30+360)%360, s: clamp(base.s*0.55,10,45), l: clamp(base.l+18,20,90) },
+      { h: (base.h+180)%360, s: clamp(Math.max(base.s,75),75,100), l: clamp(base.l,28,58) },
+    ];
+    return roles.map((c,i)=>{
+      const key = currentHarmony.id+'-'+i;
+      return locks[key] || c;
+    });
+  }
   return currentHarmony.offsets.map((off,i)=>{
     const key = currentHarmony.id+'-'+i;
     const locked = locks[key];
@@ -310,8 +333,10 @@ function restoreState(){
 
 function buildPalette(){
   const colors = computeHarmonyColors();
+  const proportions = currentHarmony.proportions;
 
   paletteGrid.innerHTML='';
+  paletteGrid.classList.toggle('palette-proportion', !!proportions);
   colors.forEach((c,i)=>{
     const key = currentHarmony.id+'-'+i;
     const locked = locks[key];
@@ -319,6 +344,7 @@ function buildPalette(){
 
     const card = document.createElement('div');
     card.className = 'swatch'+(locked?' locked':'');
+    if(proportions) card.style.flex = proportions[i]+' 1 60px';
 
     const colorDiv = document.createElement('div');
     colorDiv.className = 'swatch-color cvd-target';
@@ -352,7 +378,9 @@ function buildPalette(){
     hexLabel.textContent = hex.toUpperCase();
     const roleLabel = document.createElement('p');
     roleLabel.className='swatch-role';
-    roleLabel.textContent = i===0 ? 'base' : (currentHarmony.monoLights ? 'tone '+(i+1) : 'harmony '+(i+1));
+    roleLabel.textContent = proportions
+      ? ['Dominant','Secondary','Accent'][i]+' · '+proportions[i]+'%'
+      : (i===0 ? 'base' : (currentHarmony.monoLights ? 'tone '+(i+1) : 'harmony '+(i+1)));
 
     info.appendChild(hexLabel);
     info.appendChild(roleLabel);
