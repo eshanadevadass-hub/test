@@ -305,10 +305,11 @@ input[type=range]::-moz-range-thumb{
 .swatch-color:hover{filter:brightness(1.06);}
 
 /* Texture-aware swatches: an optional overlay so a colour reads as a material —
-   fabric weave or paint grain — instead of a flat digital square. Plain weave's
-   over/under crossing follows hawthornintl.com/fabric-guide's description;
-   cotton reuses that same weave grain underneath its own soft, radiating fold
-   shading; satin's sheen and the paint grain are their own distinct textures.
+   fabric weave, fur, or paint grain — instead of a flat digital square.
+   Cotton's over/under weave grain follows hawthornintl.com/fabric-guide's
+   plain-weave description, underneath its own soft, radiating fold shading;
+   satin's sheen, fur's turbulence-based strands, and the paint grain are
+   their own distinct, non-woven textures.
 
    Each texture is built as a mid-grey ("rgb(128,128,128)") bump map — lighter
    areas are raised, darker areas are recessed — and painted with
@@ -333,18 +334,22 @@ input[type=range]::-moz-range-thumb{
   mix-blend-mode: overlay;
   opacity:0;
 }
-html.texture-plain .swatch-color::after,
-html.texture-plain .base-swatch::after{
-  /* Plain weave: actual over/under thread interlacing, not a flat checkerboard.
-     Each thread is shaded across its own width (dark-light-dark) to read as a
-     rounded strand, and at each crossing one thread is drawn fully covering the
-     other -- exactly how an over-one-under-one weave reads (gingham, chambray,
-     calico) -- with a fine diagonal fibre grain layered on top for texture. */
+html.texture-fur .swatch-color::after,
+html.texture-fur .base-swatch::after{
+  /* Faux fur: turbulence noise stretched hard in one axis (baseFrequency
+     "0.9 0.02" -- fine detail across the strand, near-smooth along it) reads
+     as elongated hair strands rather than blobby noise; a contrast boost via
+     feComponentTransfer sharpens them into distinct light/dark fibres instead
+     of a grey smear, and the whole thing is rotated for a diagonal flow. A
+     second, much coarser turbulence layer laid underneath in soft-light adds
+     broad clumps and whorls -- the volume and shadow real fur has -- so it
+     isn't just a flat field of identical strands. */
   background-image:
-    repeating-linear-gradient(115deg, rgba(255,255,255,0.12) 0px 1px, rgba(0,0,0,0.14) 1px 2px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Cdefs%3E%3ClinearGradient id='h' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgb(48,48,48)'/%3E%3Cstop offset='0.5' stop-color='rgb(220,220,220)'/%3E%3Cstop offset='1' stop-color='rgb(48,48,48)'/%3E%3C/linearGradient%3E%3ClinearGradient id='v' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='rgb(38,38,38)'/%3E%3Cstop offset='0.5' stop-color='rgb(198,198,198)'/%3E%3Cstop offset='1' stop-color='rgb(38,38,38)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='16' height='16' fill='rgb(128,128,128)'/%3E%3Crect x='0' y='1' width='16' height='6' fill='url(%23h)'/%3E%3Crect x='0' y='9' width='16' height='6' fill='url(%23h)'/%3E%3Crect x='1' y='0' width='6' height='1' fill='url(%23v)'/%3E%3Crect x='1' y='1' width='6' height='6' fill='url(%23v)'/%3E%3Crect x='1' y='7' width='6' height='2' fill='url(%23v)'/%3E%3Crect x='1' y='15' width='6' height='1' fill='url(%23v)'/%3E%3Crect x='9' y='0' width='6' height='1' fill='url(%23v)'/%3E%3Crect x='9' y='7' width='6' height='2' fill='url(%23v)'/%3E%3Crect x='9' y='9' width='6' height='6' fill='url(%23v)'/%3E%3Crect x='9' y='15' width='6' height='1' fill='url(%23v)'/%3E%3C/svg%3E");
-  background-size: 2.4px 2.4px, 14px 14px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.8' intercept='-0.35'/%3E%3CfeFuncG type='linear' slope='1.8' intercept='-0.35'/%3E%3CfeFuncB type='linear' slope='1.8' intercept='-0.35'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f2)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.02' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.4' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.4' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.4' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Cg transform='rotate(38 70 70)'%3E%3Crect x='-40' y='-40' width='220' height='220' filter='url(%23f1)'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%, 65px 65px;
   background-blend-mode: soft-light, normal;
+  background-repeat: no-repeat, repeat;
   opacity: 0.95;
 }
 html.texture-cotton .swatch-color::after,
