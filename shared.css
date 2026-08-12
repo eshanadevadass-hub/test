@@ -345,12 +345,12 @@ html.texture-fur .base-swatch::after{
      broad clumps and whorls -- the volume and shadow real fur has -- so it
      isn't just a flat field of identical strands. */
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='1.8' intercept='-0.35'/%3E%3CfeFuncG type='linear' slope='1.8' intercept='-0.35'/%3E%3CfeFuncB type='linear' slope='1.8' intercept='-0.35'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f2)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.02' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.4' intercept='-0.5'/%3E%3CfeFuncG type='linear' slope='2.4' intercept='-0.5'/%3E%3CfeFuncB type='linear' slope='2.4' intercept='-0.5'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Cg transform='rotate(38 70 70)'%3E%3Crect x='-40' y='-40' width='220' height='220' filter='url(%23f1)'/%3E%3C/g%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.015' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.6' intercept='-0.55'/%3E%3CfeFuncG type='linear' slope='2.6' intercept='-0.55'/%3E%3CfeFuncB type='linear' slope='2.6' intercept='-0.55'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f2)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9 0.02' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='3.8' intercept='-0.85'/%3E%3CfeFuncG type='linear' slope='3.8' intercept='-0.85'/%3E%3CfeFuncB type='linear' slope='3.8' intercept='-0.85'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Cg transform='rotate(38 70 70)'%3E%3Crect x='-40' y='-40' width='220' height='220' filter='url(%23f1)'/%3E%3C/g%3E%3C/svg%3E");
   background-size: 100% 100%, 65px 65px;
   background-blend-mode: soft-light, normal;
   background-repeat: no-repeat, repeat;
-  opacity: 0.95;
+  opacity: 1;
 }
 html.texture-cotton .swatch-color::after,
 html.texture-cotton .base-swatch::after{
