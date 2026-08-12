@@ -271,6 +271,7 @@ function buildImagePalette(colors){
     pctLabel.className='swatch-role';
     pctLabel.textContent = Math.round(c.pct*100)+'% of photo';
     info.appendChild(hexLabel);
+    appendColorName(info, hex);
     info.appendChild(pctLabel);
     card.appendChild(colorDiv);
     card.appendChild(info);

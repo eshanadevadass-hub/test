@@ -34,6 +34,88 @@ function expandHex3(hex){
   return '#'+hex.slice(1).split('').map(c=>c+c).join('');
 }
 
+function rgbToLab(r,g,b){
+  let [R,G,B] = [r,g,b].map(v=>{
+    v/=255;
+    return v>0.04045 ? Math.pow((v+0.055)/1.055,2.4) : v/12.92;
+  });
+  const X = R*0.4124+G*0.3576+B*0.1805;
+  const Y = R*0.2126+G*0.7152+B*0.0722;
+  const Z = R*0.0193+G*0.1192+B*0.9505;
+  const Xn=0.95047, Yn=1.0, Zn=1.08883;
+  const f = t=> t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116);
+  const fx=f(X/Xn), fy=f(Y/Yn), fz=f(Z/Zn);
+  const L = 116*fy-16;
+  const a = 500*(fx-fy);
+  const bb = 200*(fy-fz);
+  return {L,a,b:bb};
+}
+
+/* A curated (not exhaustive) list of human-readable colour names, specified as
+   HSL so they're generated from the same colour math as everything else in the
+   app rather than hand-picked hex values. Matched by nearest Lab distance
+   (perceptually closer to how people judge "which named colour is this" than
+   RGB or HSL distance would be). */
+const COLOR_NAMES = [
+  {n:'Black',h:0,s:0,l:0}, {n:'Jet Black',h:0,s:0,l:6}, {n:'Charcoal',h:0,s:0,l:15},
+  {n:'Graphite',h:0,s:0,l:25}, {n:'Slate Gray',h:220,s:8,l:38}, {n:'Gray',h:0,s:0,l:50},
+  {n:'Ash Gray',h:0,s:0,l:65}, {n:'Silver',h:0,s:0,l:82}, {n:'Snow White',h:0,s:0,l:95}, {n:'White',h:0,s:0,l:100},
+  {n:'Ivory',h:45,s:35,l:94}, {n:'Cream',h:42,s:45,l:90}, {n:'Beige',h:38,s:35,l:80},
+  {n:'Sand',h:35,s:32,l:68}, {n:'Tan',h:32,s:35,l:56}, {n:'Camel',h:30,s:40,l:48},
+  {n:'Khaki',h:52,s:30,l:58}, {n:'Taupe',h:28,s:15,l:42}, {n:'Chestnut',h:22,s:35,l:32},
+  {n:'Mahogany',h:14,s:45,l:26}, {n:'Espresso',h:22,s:40,l:16}, {n:'Chocolate',h:22,s:35,l:24},
+  {n:'Pale Pink',h:350,s:55,l:88}, {n:'Blush',h:345,s:55,l:85}, {n:'Salmon',h:10,s:65,l:78},
+  {n:'Crimson',h:350,s:70,l:45}, {n:'Coral',h:8,s:72,l:62}, {n:'Brick Red',h:8,s:55,l:32},
+  {n:'Maroon',h:355,s:55,l:24}, {n:'Ruby',h:350,s:65,l:38}, {n:'Wine',h:352,s:60,l:26},
+  {n:'Rose',h:350,s:55,l:52}, {n:'Dusty Rose',h:340,s:30,l:55}, {n:'Raspberry',h:340,s:65,l:42},
+  {n:'Peach',h:22,s:70,l:80}, {n:'Apricot',h:28,s:65,l:70}, {n:'Tangerine',h:24,s:80,l:55},
+  {n:'Burnt Orange',h:20,s:65,l:35}, {n:'Rust',h:18,s:50,l:38}, {n:'Copper',h:20,s:55,l:42},
+  {n:'Terracotta',h:14,s:50,l:48}, {n:'Amber',h:38,s:80,l:52}, {n:'Gold',h:42,s:75,l:52},
+  {n:'Bronze',h:35,s:55,l:35}, {n:'Marigold',h:42,s:85,l:56}, {n:'Mustard',h:44,s:60,l:42},
+  {n:'Wheat',h:40,s:50,l:75}, {n:'Butter',h:50,s:70,l:82}, {n:'Lemon',h:52,s:80,l:65},
+  {n:'Straw',h:48,s:45,l:65}, {n:'Chartreuse',h:75,s:60,l:55}, {n:'Olive',h:65,s:45,l:30},
+  {n:'Avocado',h:75,s:40,l:32}, {n:'Moss',h:95,s:30,l:35}, {n:'Sage',h:100,s:22,l:58},
+  {n:'Mint',h:150,s:45,l:80}, {n:'Seafoam',h:155,s:45,l:75}, {n:'Green',h:120,s:55,l:42},
+  {n:'Grass Green',h:105,s:50,l:45}, {n:'Emerald',h:150,s:60,l:38}, {n:'Jade',h:155,s:50,l:42},
+  {n:'Forest Green',h:140,s:55,l:22}, {n:'Pine',h:150,s:35,l:25}, {n:'Aqua',h:180,s:55,l:75},
+  {n:'Turquoise',h:178,s:65,l:52}, {n:'Teal',h:185,s:60,l:36}, {n:'Deep Teal',h:190,s:60,l:20},
+  {n:'Powder Blue',h:200,s:55,l:82}, {n:'Sky Blue',h:200,s:65,l:62}, {n:'Steel Blue',h:205,s:45,l:45},
+  {n:'Cerulean',h:205,s:65,l:48}, {n:'Denim',h:210,s:40,l:42}, {n:'Cobalt',h:215,s:65,l:42},
+  {n:'Blue',h:220,s:65,l:52}, {n:'Navy',h:222,s:55,l:24}, {n:'Sapphire',h:228,s:65,l:38},
+  {n:'Periwinkle',h:235,s:55,l:78}, {n:'Indigo',h:245,s:50,l:42}, {n:'Slate Blue',h:255,s:40,l:52},
+  {n:'Lavender',h:265,s:45,l:83}, {n:'Violet',h:268,s:50,l:52}, {n:'Deep Purple',h:270,s:45,l:26},
+  {n:'Orchid',h:288,s:55,l:58}, {n:'Lilac',h:295,s:40,l:80}, {n:'Plum',h:300,s:50,l:38},
+  {n:'Eggplant',h:300,s:45,l:22}, {n:'Grape',h:290,s:45,l:32}, {n:'Magenta',h:312,s:65,l:50},
+  {n:'Fuchsia',h:322,s:70,l:52}, {n:'Hot Pink',h:328,s:80,l:62}, {n:'Pink',h:335,s:65,l:70},
+  {n:'Mauve',h:328,s:28,l:56}, {n:'Berry',h:335,s:55,l:36}
+];
+let _colorNamesLab = null;
+function nearestColorName(hex){
+  if(!_colorNamesLab){
+    _colorNamesLab = COLOR_NAMES.map(c=>{
+      const [r,g,b] = hslToRgb(c.h,c.s,c.l);
+      return {n:c.n, lab:rgbToLab(r,g,b)};
+    });
+  }
+  const clean = hex[0]==='#' ? hex.slice(1) : hex;
+  const r = parseInt(clean.slice(0,2),16), g = parseInt(clean.slice(2,4),16), b = parseInt(clean.slice(4,6),16);
+  const lab = rgbToLab(r,g,b);
+  let best=null, bestDist=Infinity;
+  for(const c of _colorNamesLab){
+    const dL=lab.L-c.lab.L, da=lab.a-c.lab.a, db=lab.b-c.lab.b;
+    const dist = dL*dL+da*da+db*db;
+    if(dist<bestDist){ bestDist=dist; best=c.n; }
+  }
+  return best;
+}
+function appendColorName(infoEl, hex){
+  const nameEl = document.createElement('p');
+  nameEl.className = 'swatch-name';
+  nameEl.textContent = nearestColorName(hex);
+  infoEl.appendChild(nameEl);
+  return nameEl;
+}
+
 // Wheels next to a lightness control must re-call this with the current lightness on every change, not just on init.
 function paintStaticWheel(targetCtx, targetSize, lightness=55){
   const c = targetSize/2, rad = c-4;
@@ -318,6 +400,7 @@ function makeSwatchCard(hex, roleText){
   hexLabel.className = 'swatch-hex';
   hexLabel.textContent = hex.toUpperCase();
   info.appendChild(hexLabel);
+  appendColorName(info, hex);
   if(roleText){
     const roleLabel = document.createElement('p');
     roleLabel.className = 'swatch-role';

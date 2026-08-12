@@ -70,6 +70,7 @@
       <div class="base-codes">
         <div><input type="text" id="baseHex" class="hex-input" value="#000000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Edit hex code"></div>
         <div id="baseHsl">hsl(0, 0%, 0%)</div>
+        <div id="baseName" style="font-style:italic;"></div>
       </div>
     </div>
 
@@ -198,6 +199,7 @@ function updateBaseReadout(){
   baseSwatch.style.background = hex;
   if(document.activeElement !== baseHex) baseHex.value = hex.toUpperCase();
   baseHsl.textContent = `hsl(${Math.round(base.h)}, ${Math.round(base.s)}%, ${Math.round(base.l)}%)`;
+  document.getElementById('baseName').textContent = nearestColorName(hex);
   lightVal.textContent = Math.round(base.l)+'%';
   document.documentElement.style.setProperty('--live-color', `hsl(${Math.round(base.h)}, ${Math.round(Math.max(base.s,45))}%, ${Math.round(Math.min(Math.max(base.l,35),68))}%)`);
   buildPaletteLink.href = 'palette-generator.html#'+new URLSearchParams({h:base.h.toFixed(1), s:base.s.toFixed(1), l:base.l.toFixed(1)}).toString();

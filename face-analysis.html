@@ -320,23 +320,6 @@ sampleCircle.addEventListener('pointermove', e=>{
   positionCircle();
 });
 
-function rgbToLab(r,g,b){
-  let [R,G,B] = [r,g,b].map(v=>{
-    v/=255;
-    return v>0.04045 ? Math.pow((v+0.055)/1.055,2.4) : v/12.92;
-  });
-  const X = R*0.4124+G*0.3576+B*0.1805;
-  const Y = R*0.2126+G*0.7152+B*0.0722;
-  const Z = R*0.0193+G*0.1192+B*0.9505;
-  const Xn=0.95047, Yn=1.0, Zn=1.08883;
-  const f = t=> t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116);
-  const fx=f(X/Xn), fy=f(Y/Yn), fz=f(Z/Zn);
-  const L = 116*fy-16;
-  const a = 500*(fx-fy);
-  const bb = 200*(fy-fz);
-  return {L,a,b:bb};
-}
-
 function analyzeSkin(){
   const w = photoCanvas.width, h = photoCanvas.height;
   const x0 = Math.max(0, Math.floor(circlePos.x-SAMPLE_R));
@@ -435,6 +418,7 @@ function buildSeasonPalette(gridEl, season){
     hexLabel.className='swatch-hex';
     hexLabel.textContent = hex.toUpperCase();
     info2.appendChild(hexLabel);
+    appendColorName(info2, hex);
     card.appendChild(colorDiv);
     card.appendChild(info2);
     gridEl.appendChild(card);
@@ -525,6 +509,7 @@ function buildFacePalette(gridEl, hues, undertone, depth, cautious, opts={}){
     hexLabel.className='swatch-hex';
     hexLabel.textContent = hex.toUpperCase();
     info.appendChild(hexLabel);
+    appendColorName(info, hex);
     card.appendChild(colorDiv);
     card.appendChild(info);
     gridEl.appendChild(card);

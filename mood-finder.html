@@ -77,6 +77,7 @@
           <div class="base-swatch cvd-target" id="moodColourSwatch"></div>
           <div class="base-codes">
             <div id="moodColourHex">#000000</div>
+            <div id="moodColourName" style="font-style:italic;"></div>
           </div>
         </div>
       </div>
@@ -220,6 +221,7 @@ function updateMoodColourReadout(){
   const hex = hslToHex(moodColour.h, moodColour.s, moodColour.l);
   moodColourSwatch.style.background = hex;
   moodColourHex.textContent = hex.toUpperCase();
+  document.getElementById('moodColourName').textContent = nearestColorName(hex);
   moodWheelLightSlider.value = Math.round(moodColour.l);
   moodWheelLightVal.textContent = Math.round(moodColour.l)+'%';
   moodColourDesc.textContent = describeColourMood(moodColour.h, moodColour.s, moodColour.l);

@@ -67,6 +67,7 @@
           <div class="base-codes">
             <div><input type="text" id="baseHex" class="hex-input" value="#000000" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Edit hex code"></div>
             <div id="baseHsl">hsl(0, 0%, 0%)</div>
+            <div id="baseName" style="font-style:italic;"></div>
           </div>
           <a class="iconbtn" id="wheelLink" href="index.html" style="margin-left:auto;">Open full-size wheel</a>
         </div>
@@ -199,6 +200,7 @@ function updateBaseReadout(){
   baseSwatch.style.background = hex;
   if(document.activeElement !== baseHex) baseHex.value = hex.toUpperCase();
   baseHsl.textContent = `hsl(${Math.round(base.h)}, ${Math.round(base.s)}%, ${Math.round(base.l)}%)`;
+  document.getElementById('baseName').textContent = nearestColorName(hex);
   wheelLink.href = 'index.html#'+new URLSearchParams({h:base.h.toFixed(1), s:base.s.toFixed(1), l:base.l.toFixed(1)}).toString();
   miniLightSlider.value = Math.round(base.l);
   miniLightVal.textContent = Math.round(base.l)+'%';
@@ -391,6 +393,7 @@ function buildPalette(){
       : (i===0 ? 'base' : (currentHarmony.monoLights ? 'tone '+(i+1) : 'harmony '+(i+1)));
 
     info.appendChild(hexLabel);
+    appendColorName(info, hex);
     info.appendChild(roleLabel);
     card.appendChild(colorDiv);
     card.appendChild(info);
