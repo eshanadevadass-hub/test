@@ -366,18 +366,28 @@ html.texture-twill .base-swatch::after{
 }
 html.texture-satin .swatch-color::after,
 html.texture-satin .base-swatch::after{
-  /* Satin: floated threads hide most of the weave, leaving a broad lustrous
-     sheen -- a bright band flanked by soft shadow -- with only a whisper of
-     fibre grain underneath, much fainter than the other two, since a smooth
-     unbroken surface is satin's whole point. */
+  /* Satin: draped fabric catching light along several folds, not one flat
+     diagonal sweep. Each fold is a full-size, non-repeating gradient band at
+     its own slightly-different angle, alternating dark (multiply, a shadowed
+     valley) and bright (screen, a raised ridge catching the light) so they
+     genuinely lighten and darken each other where they overlap -- which is
+     what reads as 3D drape instead of a flat printed streak. A soft vignette
+     rounds the corners like fabric falling away from the light, and a whisper
+     of fibre grain (much fainter than the other two textures, since staying
+     smooth is satin's whole point) keeps it from looking like plastic. */
   background-image:
     repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px 1px, rgba(0,0,0,0.05) 1px 2px),
-    linear-gradient(120deg,
-      rgb(40,40,40) 0%, rgb(128,128,128) 26%,
-      rgb(250,250,250) 48%, rgb(128,128,128) 70%, rgb(40,40,40) 100%);
-  background-size: 2px 2px, 260% 260%;
-  background-blend-mode: soft-light, normal;
-  background-position: 0 0, 0 0;
+    linear-gradient(108deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.6) 5%, transparent 15%),
+    linear-gradient(124deg, transparent 8%, rgba(255,255,255,0.9) 20%, transparent 32%),
+    linear-gradient(96deg, transparent 28%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.2) 47%, transparent 56%),
+    linear-gradient(132deg, transparent 44%, rgba(255,255,255,0.95) 57%, transparent 70%),
+    linear-gradient(101deg, transparent 62%, rgba(0,0,0,0.55) 74%, transparent 85%),
+    linear-gradient(119deg, transparent 78%, rgba(255,255,255,0.75) 91%, transparent 100%),
+    radial-gradient(ellipse 140% 140% at 50% 50%, transparent 55%, rgba(0,0,0,0.35) 100%);
+  background-size: 2px 2px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-blend-mode: soft-light, multiply, screen, multiply, screen, multiply, screen, multiply;
+  background-position: 0 0;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   opacity: 0.95;
 }
 html.texture-paint .swatch-color::after,
