@@ -305,10 +305,10 @@ input[type=range]::-moz-range-thumb{
 .swatch-color:hover{filter:brightness(1.06);}
 
 /* Texture-aware swatches: an optional overlay so a colour reads as a material —
-   fabric weave or paint grain — instead of a flat digital square. Weave structures
-   (plain weave's over/under crossing, twill's diagonal ribs) follow
-   hawthornintl.com/fabric-guide's descriptions; satin's sheen and the paint grain
-   are their own distinct, non-woven textures.
+   fabric weave or paint grain — instead of a flat digital square. Plain weave's
+   over/under crossing follows hawthornintl.com/fabric-guide's description;
+   cotton reuses that same weave grain underneath its own soft, radiating fold
+   shading; satin's sheen and the paint grain are their own distinct textures.
 
    Each texture is built as a mid-grey ("rgb(128,128,128)") bump map — lighter
    areas are raised, darker areas are recessed — and painted with
@@ -347,21 +347,33 @@ html.texture-plain .base-swatch::after{
   background-blend-mode: soft-light, normal;
   opacity: 0.95;
 }
-html.texture-twill .swatch-color::after,
-html.texture-twill .base-swatch::after{
-  /* Twill: each diagonal rib is shaded through five stops instead of a flat
-     band, so light catches one edge and falls off gradually toward the next
-     rib's shadow -- a real raised cord (denim) rather than a printed stripe --
-     plus the same fine fibre grain as the other weaves. */
+html.texture-cotton .swatch-color::after,
+html.texture-cotton .base-swatch::after{
+  /* Cotton: a matte, plain-woven surface -- soft diffuse shading rather than
+     satin's sharp specular sheen. A conic gradient radiates alternating soft
+     light/dark wedges around an off-centre point, the way a bunched cotton or
+     linen swatch actually pleats when twisted at its centre, with a shadowed
+     knot at that twist point, the same over/under weave grain as plain weave
+     underneath, and small dark fibre slubs scattered on top for the flecked,
+     slightly irregular surface real cotton/linen shows up close. */
   background-image:
-    repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0px 1px, rgba(0,0,0,0.12) 1px 2px),
-    repeating-linear-gradient(45deg,
-      rgb(30,30,30) 0px, rgb(85,85,85) 1.5px,
-      rgb(195,195,195) 3px, rgb(235,235,235) 4px,
-      rgb(150,150,150) 5.5px, rgb(70,70,70) 7px,
-      rgb(30,30,30) 8.5px);
-  background-size: 2.4px 2.4px, 12px 12px;
-  background-blend-mode: soft-light, normal;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='6' cy='9' r='0.9' fill='rgb(50,50,50)'/%3E%3Ccircle cx='23' cy='5' r='0.7' fill='rgb(65,65,65)'/%3E%3Ccircle cx='31' cy='19' r='1' fill='rgb(45,45,45)'/%3E%3Ccircle cx='13' cy='24' r='0.6' fill='rgb(70,70,70)'/%3E%3Ccircle cx='36' cy='33' r='0.8' fill='rgb(55,55,55)'/%3E%3Ccircle cx='18' cy='36' r='0.6' fill='rgb(75,75,75)'/%3E%3Ccircle cx='2' cy='30' r='0.7' fill='rgb(60,60,60)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0px 1px, rgba(0,0,0,0.10) 1px 2px),
+    conic-gradient(from 15deg at 42% 58%,
+      rgba(0,0,0,0.32) 0deg, rgba(255,255,255,0.36) 22deg,
+      rgba(0,0,0,0.28) 48deg, rgba(255,255,255,0.32) 72deg,
+      rgba(0,0,0,0.3) 98deg, rgba(255,255,255,0.36) 122deg,
+      rgba(0,0,0,0.28) 150deg, rgba(255,255,255,0.32) 178deg,
+      rgba(0,0,0,0.3) 208deg, rgba(255,255,255,0.36) 232deg,
+      rgba(0,0,0,0.28) 258deg, rgba(255,255,255,0.32) 288deg,
+      rgba(0,0,0,0.3) 318deg, rgba(255,255,255,0.34) 344deg,
+      rgba(0,0,0,0.32) 360deg),
+    radial-gradient(circle at 42% 58%, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.22) 6%, transparent 15%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Cdefs%3E%3ClinearGradient id='ch' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='rgb(70,70,70)'/%3E%3Cstop offset='0.5' stop-color='rgb(190,190,190)'/%3E%3Cstop offset='1' stop-color='rgb(70,70,70)'/%3E%3C/linearGradient%3E%3ClinearGradient id='cv' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='rgb(60,60,60)'/%3E%3Cstop offset='0.5' stop-color='rgb(175,175,175)'/%3E%3Cstop offset='1' stop-color='rgb(60,60,60)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='16' height='16' fill='rgb(128,128,128)'/%3E%3Crect x='0' y='1' width='16' height='6' fill='url(%23ch)'/%3E%3Crect x='0' y='9' width='16' height='6' fill='url(%23ch)'/%3E%3Crect x='1' y='0' width='6' height='1' fill='url(%23cv)'/%3E%3Crect x='1' y='1' width='6' height='6' fill='url(%23cv)'/%3E%3Crect x='1' y='7' width='6' height='2' fill='url(%23cv)'/%3E%3Crect x='1' y='15' width='6' height='1' fill='url(%23cv)'/%3E%3Crect x='9' y='0' width='6' height='1' fill='url(%23cv)'/%3E%3Crect x='9' y='7' width='6' height='2' fill='url(%23cv)'/%3E%3Crect x='9' y='9' width='6' height='6' fill='url(%23cv)'/%3E%3Crect x='9' y='15' width='6' height='1' fill='url(%23cv)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 145% 145% at 50% 50%, transparent 60%, rgba(0,0,0,0.25) 100%);
+  background-size: 40px 40px, 2.4px 2.4px, 100% 100%, 100% 100%, 11px 11px, 100% 100%;
+  background-blend-mode: multiply, soft-light, soft-light, multiply, normal, multiply;
+  background-repeat: repeat, repeat, no-repeat, no-repeat, repeat, no-repeat;
   opacity: 0.95;
 }
 html.texture-satin .swatch-color::after,
