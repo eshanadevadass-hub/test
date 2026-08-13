@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colouristic — colour theory, made tactile</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="home-hero">
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic</h1>
+    <p>A colour wheel, palette generator, photo palette, mood finder, face analysis, and a hex-guessing game — all in one place, all running right here in your browser.</p>
+  </header>
+
+  <div class="home-layout">
+    <div>
+      <p class="section-title" style="margin-bottom:14px;">What's inside</p>
+      <div class="home-features" id="homeFeatures"></div>
+    </div>
+
+    <div class="auth-card" id="authCard"></div>
+  </div>
+
+</div>
+
+<script src="shared.js"></script>
+<script>
+const FEATURES = [
+  { name:'Colour wheel', color:'violet', desc:"Drag to explore hue and saturation, see paint and light mixing recipes, check contrast live." },
+  { name:'Palette generator', color:'gold', desc:"Build harmony palettes, or split a colour 60/30/10 by proportion instead of hue." },
+  { name:'Photo palette', color:'teal', desc:"Pull a ready-made palette out of any photo, sorted by how much of the image each colour covers." },
+  { name:'Mood finder', color:'sage', desc:"Pick a feeling and get a palette built to convey it, or build one from your own base colours." },
+  { name:'Face analysis', color:'coral', desc:"Scan your skin tone for undertone, depth, season, and a palette matched to you." },
+  { name:'Hex guesser', color:'pink', desc:"Test your eye — guess a colour from its hex code, or the hex code from a colour." },
+  { name:'Library', color:'sky', desc:"Save palettes you've built anywhere in the app, organised into your own libraries." }
+];
+
+const homeFeatures = document.getElementById('homeFeatures');
+FEATURES.forEach(f=>{
+  const card = document.createElement('div');
+  card.className = 'home-feature-card';
+  const dot = document.createElement('span');
+  dot.className = 'home-feature-dot';
+  dot.style.background = 'var(--'+f.color+')';
+  const h3 = document.createElement('h3');
+  h3.textContent = f.name;
+  const p = document.createElement('p');
+  p.textContent = f.desc;
+  card.appendChild(dot);
+  card.appendChild(h3);
+  card.appendChild(p);
+  homeFeatures.appendChild(card);
+});
+
+function nextDestination(){
+  const params = new URLSearchParams(location.search);
+  return params.get('next') || 'index.html';
+}
+
+const authCard = document.getElementById('authCard');
+
+function renderWelcomeBack(account){
+  authCard.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'auth-welcome';
+  const h2 = document.createElement('h2');
+  h2.textContent = 'Welcome back, '+account.username;
+  const p = document.createElement('p');
+  p.textContent = "You're already signed in on this device.";
+  const continueBtn = document.createElement('button');
+  continueBtn.type = 'button'; continueBtn.className = 'iconbtn active';
+  continueBtn.textContent = 'Continue to the app';
+  continueBtn.style.width = '100%'; continueBtn.style.justifyContent = 'center';
+  continueBtn.addEventListener('click', ()=>{ location.href = nextDestination(); });
+  const outBtn = document.createElement('button');
+  outBtn.type = 'button'; outBtn.className = 'iconbtn';
+  outBtn.textContent = 'Not you? Log out';
+  outBtn.style.width = '100%'; outBtn.style.justifyContent = 'center'; outBtn.style.marginTop = '8px';
+  outBtn.addEventListener('click', ()=>{ logOut(); renderAuthForm('login'); });
+  wrap.appendChild(h2);
+  wrap.appendChild(p);
+  wrap.appendChild(continueBtn);
+  wrap.appendChild(outBtn);
+  authCard.appendChild(wrap);
+}
+
+function renderAuthForm(mode){
+  authCard.innerHTML = '';
+
+  const tabs = document.createElement('div');
+  tabs.className = 'auth-tabs';
+  const loginTab = document.createElement('button');
+  loginTab.type='button'; loginTab.className='mix-tab'; loginTab.textContent='Log in';
+  const signupTab = document.createElement('button');
+  signupTab.type='button'; signupTab.className='mix-tab'; signupTab.textContent='Sign up';
+  tabs.appendChild(loginTab); tabs.appendChild(signupTab);
+
+  const fieldsWrap = document.createElement('div');
+  fieldsWrap.className = 'auth-fields';
+
+  const userInput = document.createElement('input');
+  userInput.type = 'text'; userInput.className = 'hex-guess-input';
+  userInput.placeholder = 'Username'; userInput.autocomplete = 'username';
+
+  const passInput = document.createElement('input');
+  passInput.type = 'password'; passInput.className = 'hex-guess-input';
+  passInput.placeholder = 'Password'; passInput.autocomplete = 'current-password';
+
+  const confirmInput = document.createElement('input');
+  confirmInput.type = 'password'; confirmInput.className = 'hex-guess-input';
+  confirmInput.placeholder = 'Confirm password'; confirmInput.autocomplete = 'new-password';
+
+  fieldsWrap.appendChild(userInput);
+  fieldsWrap.appendChild(passInput);
+  fieldsWrap.appendChild(confirmInput);
+
+  const errorEl = document.createElement('p');
+  errorEl.className = 'auth-error';
+  errorEl.style.display = 'none';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'button'; submitBtn.className = 'iconbtn active';
+  submitBtn.style.width = '100%'; submitBtn.style.justifyContent = 'center'; submitBtn.style.marginTop = '14px';
+
+  const note = document.createElement('p');
+  note.className = 'auth-note';
+  note.textContent = "This runs entirely in your browser — there's no server, so this keeps profiles separate on this device only. It doesn't protect your data or sync it anywhere else.";
+
+  function setMode(m){
+    mode = m;
+    loginTab.classList.toggle('active', m==='login');
+    signupTab.classList.toggle('active', m==='signup');
+    submitBtn.textContent = m==='login' ? 'Log in' : 'Create account';
+    confirmInput.style.display = m==='signup' ? 'block' : 'none';
+    errorEl.style.display = 'none';
+  }
+  loginTab.addEventListener('click', ()=>setMode('login'));
+  signupTab.addEventListener('click', ()=>setMode('signup'));
+
+  async function submit(){
+    errorEl.style.display = 'none';
+    if(mode==='signup'){
+      if(passInput.value !== confirmInput.value){
+        errorEl.textContent = "Passwords don't match.";
+        errorEl.style.display = 'block';
+        return;
+      }
+      const res = await signUp(userInput.value, passInput.value);
+      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
+    } else {
+      const res = await logIn(userInput.value, passInput.value);
+      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
+    }
+    location.href = nextDestination();
+  }
+  submitBtn.addEventListener('click', submit);
+  passInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  confirmInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+
+  authCard.appendChild(tabs);
+  authCard.appendChild(fieldsWrap);
+  authCard.appendChild(errorEl);
+  authCard.appendChild(submitBtn);
+  authCard.appendChild(note);
+
+  setMode(mode);
+  userInput.focus();
+}
+
+const existing = getActiveAccount();
+if(existing) renderWelcomeBack(existing);
+else renderAuthForm('login');
+</script>
+</body>
+</html>

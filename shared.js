@@ -1,3 +1,25 @@
+/* Every page except home.html requires an active local profile -- redirect
+   to the gate immediately (before the rest of this file, or the page's own
+   script, does any real work) rather than waiting until the bottom-of-file
+   init block, to keep the flash of protected content as short as possible.
+   getActiveAccount/loadAccountsData below are function declarations, so
+   they're hoisted and safe to call from here -- but ACCOUNTS_STORAGE_KEY is
+   a const those functions read, and a const is NOT usable before its own
+   declaration line runs (the "temporal dead zone"), so it has to be defined
+   here too rather than left down with the rest of the accounts code. */
+const ACCOUNTS_STORAGE_KEY = 'colouristic.accounts.v1';
+function currentPageFile(){
+  const last = location.pathname.split('/').pop();
+  return last || 'index.html';
+}
+function enforceAccountGate(){
+  if(currentPageFile()==='home.html') return;
+  if(getActiveAccount()) return;
+  const dest = 'home.html?next='+encodeURIComponent(currentPageFile()+location.search+location.hash);
+  location.replace(dest);
+}
+enforceAccountGate();
+
 function hslToRgb(h,s,l){
   s/=100; l/=100;
   const c=(1-Math.abs(2*l-1))*s;
@@ -424,8 +446,8 @@ function genId(prefix){
    hygiene, not real security: anyone with access to this browser's storage
    can still see everything. Signed-out ("Guest") data keeps using the
    original, unnamespaced keys, so nothing already saved gets hidden by
-   adding this feature. */
-const ACCOUNTS_STORAGE_KEY = 'colouristic.accounts.v1';
+   adding this feature. ACCOUNTS_STORAGE_KEY itself is declared at the top
+   of this file, not here -- see the comment there. */
 
 function loadAccountsData(){
   try{
@@ -492,140 +514,15 @@ function renderAccountBar(){
   if(!bar) return;
   bar.innerHTML = '';
   const account = getActiveAccount();
+  if(!account) return;
   const label = document.createElement('span');
   label.className = 'account-label';
-  if(account){
-    label.textContent = 'Signed in as '+account.username;
-    const switchBtn = document.createElement('button');
-    switchBtn.className = 'iconbtn'; switchBtn.type = 'button';
-    switchBtn.textContent = 'Switch account';
-    switchBtn.addEventListener('click', ()=>openAccountModal('login'));
-    const outBtn = document.createElement('button');
-    outBtn.className = 'iconbtn'; outBtn.type = 'button';
-    outBtn.textContent = 'Log out';
-    outBtn.addEventListener('click', logOut);
-    bar.appendChild(label); bar.appendChild(switchBtn); bar.appendChild(outBtn);
-  } else {
-    label.textContent = 'Not signed in';
-    const inBtn = document.createElement('button');
-    inBtn.className = 'iconbtn'; inBtn.type = 'button';
-    inBtn.textContent = 'Log in';
-    inBtn.addEventListener('click', ()=>openAccountModal('login'));
-    const upBtn = document.createElement('button');
-    upBtn.className = 'iconbtn'; upBtn.type = 'button';
-    upBtn.textContent = 'Sign up';
-    upBtn.addEventListener('click', ()=>openAccountModal('signup'));
-    bar.appendChild(label); bar.appendChild(inBtn); bar.appendChild(upBtn);
-  }
-}
-
-function escAccountModal(e){ if(e.key==='Escape') closeAccountModal(); }
-function closeAccountModal(){
-  const el = document.getElementById('accountModalOverlay');
-  if(el) el.remove();
-  document.removeEventListener('keydown', escAccountModal);
-}
-function openAccountModal(mode){
-  closeAccountModal();
-  const overlay = document.createElement('div');
-  overlay.className = 'account-modal-overlay';
-  overlay.id = 'accountModalOverlay';
-  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeAccountModal(); });
-
-  const card = document.createElement('div');
-  card.className = 'account-modal-card';
-
-  const tabs = document.createElement('div');
-  tabs.className = 'account-modal-tabs';
-  const loginTab = document.createElement('button');
-  loginTab.type='button'; loginTab.className='mix-tab'; loginTab.textContent='Log in';
-  const signupTab = document.createElement('button');
-  signupTab.type='button'; signupTab.className='mix-tab'; signupTab.textContent='Sign up';
-  tabs.appendChild(loginTab); tabs.appendChild(signupTab);
-
-  const note = document.createElement('p');
-  note.className = 'hint';
-  note.style.margin = '10px 0 0';
-  note.textContent = "This runs entirely in this browser — there's no server, so it keeps profiles separate on this device only. It doesn't protect your data or sync it anywhere else.";
-
-  const fieldsWrap = document.createElement('div');
-  fieldsWrap.className = 'account-modal-fields';
-
-  const userInput = document.createElement('input');
-  userInput.type = 'text'; userInput.className = 'hex-guess-input';
-  userInput.placeholder = 'Username'; userInput.autocomplete = 'username';
-
-  const passInput = document.createElement('input');
-  passInput.type = 'password'; passInput.className = 'hex-guess-input';
-  passInput.placeholder = 'Password';
-
-  const confirmInput = document.createElement('input');
-  confirmInput.type = 'password'; confirmInput.className = 'hex-guess-input';
-  confirmInput.placeholder = 'Confirm password';
-
-  const errorEl = document.createElement('p');
-  errorEl.className = 'account-modal-error';
-  errorEl.style.display = 'none';
-
-  const submitBtn = document.createElement('button');
-  submitBtn.type = 'button'; submitBtn.className = 'iconbtn active';
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button'; closeBtn.className = 'iconbtn';
-  closeBtn.textContent = 'Cancel';
-  closeBtn.addEventListener('click', closeAccountModal);
-
-  function setMode(m){
-    mode = m;
-    loginTab.classList.toggle('active', m==='login');
-    signupTab.classList.toggle('active', m==='signup');
-    submitBtn.textContent = m==='login' ? 'Log in' : 'Create account';
-    confirmInput.style.display = m==='signup' ? 'block' : 'none';
-    errorEl.style.display = 'none';
-  }
-  loginTab.addEventListener('click', ()=>setMode('login'));
-  signupTab.addEventListener('click', ()=>setMode('signup'));
-
-  async function submit(){
-    errorEl.style.display = 'none';
-    if(mode==='signup'){
-      if(passInput.value !== confirmInput.value){
-        errorEl.textContent = "Passwords don't match.";
-        errorEl.style.display = 'block';
-        return;
-      }
-      const res = await signUp(userInput.value, passInput.value);
-      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
-    } else {
-      const res = await logIn(userInput.value, passInput.value);
-      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
-    }
-    closeAccountModal();
-  }
-  submitBtn.addEventListener('click', submit);
-  passInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
-  confirmInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
-
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-  actions.style.marginTop = '14px';
-  actions.appendChild(submitBtn);
-  actions.appendChild(closeBtn);
-
-  fieldsWrap.appendChild(userInput);
-  fieldsWrap.appendChild(passInput);
-  fieldsWrap.appendChild(confirmInput);
-
-  card.appendChild(tabs);
-  card.appendChild(note);
-  card.appendChild(fieldsWrap);
-  card.appendChild(errorEl);
-  card.appendChild(actions);
-  overlay.appendChild(card);
-  document.body.appendChild(overlay);
-
-  setMode(mode);
-  document.addEventListener('keydown', escAccountModal);
-  userInput.focus();
+  label.textContent = 'Signed in as '+account.username;
+  const outBtn = document.createElement('button');
+  outBtn.className = 'iconbtn'; outBtn.type = 'button';
+  outBtn.textContent = 'Log out';
+  outBtn.addEventListener('click', ()=>{ logOut(); location.href = 'home.html'; });
+  bar.appendChild(label); bar.appendChild(outBtn);
 }
 function initAccountControl(){
   renderAccountBar();

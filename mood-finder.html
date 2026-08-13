@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('colouristic.accounts.v1');
+    var data = raw ? JSON.parse(raw) : null;
+    if(!data || !data.activeAccountId){
+      location.replace('home.html?next='+encodeURIComponent(location.pathname.split('/').pop()+location.search+location.hash));
+    }
+  }catch(e){}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mood finder — Colouristic</title>
 <link rel="stylesheet" href="shared.css">
