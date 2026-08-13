@@ -584,6 +584,28 @@ label.iconbtn{display:inline-flex;}
 .game-score-big{font-family:'Fraunces',serif;font-size:32px;font-weight:500;margin:0;}
 .game-score-note{font-size:13px;color:var(--text-dim);margin:6px 0 0;line-height:1.5;}
 
+.account-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:12.5px;}
+.account-label{color:var(--text-dim);}
+.account-modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.6);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  z-index:200;
+}
+.account-modal-card{
+  background:var(--surface);
+  border:0.5px solid var(--line-strong);
+  border-top:2px solid var(--live-color);
+  border-radius:16px;
+  padding:24px;
+  width:100%;max-width:340px;
+}
+.account-modal-tabs{display:flex;gap:6px;}
+.account-modal-fields{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+.account-modal-fields input{width:100%;}
+.account-modal-error{color:#d98a8a;font-size:12.5px;margin:10px 0 0;}
+
 .cvd-control{display:flex;align-items:center;gap:10px;margin:-20px 0 28px;flex-wrap:wrap;}
 .cvd-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;}
 .cvd-select{
@@ -597,7 +619,7 @@ label.iconbtn{display:inline-flex;}
 
 .mini-wheel-row{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px;}
 .mini-wheel-side{flex:1;min-width:220px;display:flex;flex-direction:column;gap:14px;}
-#miniMarker{
+#miniMarker,#moodWheelMarker,#baseWheelMarker{
   position:absolute;
   width:12px;height:12px;
   border-radius:50%;

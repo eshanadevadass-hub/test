@@ -25,6 +25,8 @@
     <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
   </nav>
 
+  <div class="account-bar" id="accountBar"></div>
+
   <div class="cvd-control">
     <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
     <select id="cvdSelect" class="cvd-select">
@@ -120,29 +122,29 @@ let gameRounds = 0;
 let gameTotalScore = 0;
 let gameStreak = 0;
 
-const GAME_STORAGE_KEY = 'colouristic.gameStats.v1';
+const GAME_STORAGE_KEY_BASE = 'colouristic.gameStats.v1';
 function saveGameState(lastScore){
   try{
-    localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify({rounds:gameRounds, totalScore:gameTotalScore, streak:gameStreak, lastScore}));
+    localStorage.setItem(namespacedKey(GAME_STORAGE_KEY_BASE), JSON.stringify({rounds:gameRounds, totalScore:gameTotalScore, streak:gameStreak, lastScore}));
   }catch(e){}
 }
 function loadGameState(){
   try{
-    const raw = localStorage.getItem(GAME_STORAGE_KEY);
+    const raw = localStorage.getItem(namespacedKey(GAME_STORAGE_KEY_BASE));
     return raw ? JSON.parse(raw) : null;
   }catch(e){ return null; }
 }
 function restoreGameState(){
   const saved = loadGameState();
-  if(!saved) return;
-  gameRounds = saved.rounds || 0;
-  gameTotalScore = saved.totalScore || 0;
-  gameStreak = saved.streak || 0;
-  document.getElementById('gameScoreVal').textContent = saved.lastScore!=null ? saved.lastScore : '—';
+  gameRounds = saved ? (saved.rounds || 0) : 0;
+  gameTotalScore = saved ? (saved.totalScore || 0) : 0;
+  gameStreak = saved ? (saved.streak || 0) : 0;
+  document.getElementById('gameScoreVal').textContent = saved && saved.lastScore!=null ? saved.lastScore : '—';
   document.getElementById('gameAvgVal').textContent = gameRounds>0 ? Math.round(gameTotalScore/gameRounds) : '—';
   document.getElementById('gameStreakVal').textContent = gameStreak;
   document.getElementById('gameRoundVal').textContent = gameRounds;
 }
+window.addEventListener('colouristic:accountchanged', restoreGameState);
 
 paintStaticWheel(gameCtx, gameSize, gameGuess.l);
 

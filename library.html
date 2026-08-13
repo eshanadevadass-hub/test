@@ -25,6 +25,8 @@
     <a class="tool-nav-link active" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
   </nav>
 
+  <div class="account-bar" id="accountBar"></div>
+
   <div class="cvd-control">
     <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
     <select id="cvdSelect" class="cvd-select">
@@ -245,6 +247,12 @@ document.getElementById('deleteLibraryBtn').addEventListener('click', ()=>{
     renderLibraryTabs();
     renderLibraryContent();
   }
+});
+
+window.addEventListener('colouristic:accountchanged', ()=>{
+  currentLibraryId = null;
+  renderLibraryTabs();
+  renderLibraryContent();
 });
 
 renderLibraryTabs();

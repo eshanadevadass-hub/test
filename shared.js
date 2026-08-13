@@ -412,20 +412,235 @@ function makeSwatchCard(hex, roleText){
   return card;
 }
 
-/* ---- Saved palette libraries ---- */
-const LIBRARY_STORAGE_KEY = 'colouristic.libraries.v1';
-
 function genId(prefix){
   return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 }
 
+/* ---- Local accounts ----
+   There's no server here, so this can't protect data or sync it across
+   devices -- it's a lightweight way for people sharing one browser to keep
+   separate libraries and game stats. Passwords are SHA-256 hashed before
+   storage so they're not sitting in localStorage as plain text, but that's
+   hygiene, not real security: anyone with access to this browser's storage
+   can still see everything. Signed-out ("Guest") data keeps using the
+   original, unnamespaced keys, so nothing already saved gets hidden by
+   adding this feature. */
+const ACCOUNTS_STORAGE_KEY = 'colouristic.accounts.v1';
+
+function loadAccountsData(){
+  try{
+    const raw = localStorage.getItem(ACCOUNTS_STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { accounts: [], activeAccountId: null };
+}
+function saveAccountsData(data){
+  try{ localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+}
+function getActiveAccount(){
+  const data = loadAccountsData();
+  if(!data.activeAccountId) return null;
+  return data.accounts.find(a=>a.id===data.activeAccountId) || null;
+}
+function namespacedKey(baseKey){
+  const acct = getActiveAccount();
+  return acct ? baseKey+'::'+acct.id : baseKey;
+}
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function signUp(username, password){
+  username = (username||'').trim();
+  if(!username) return {ok:false, error:'Enter a username.'};
+  if(!password || password.length<4) return {ok:false, error:'Password must be at least 4 characters.'};
+  const data = loadAccountsData();
+  if(data.accounts.some(a=>a.username.toLowerCase()===username.toLowerCase())){
+    return {ok:false, error:'That username is already taken on this device.'};
+  }
+  const account = {id:genId('acct'), username, passwordHash: await hashPassword(password), createdAt:Date.now()};
+  data.accounts.push(account);
+  data.activeAccountId = account.id;
+  saveAccountsData(data);
+  notifyAccountChanged();
+  return {ok:true, account};
+}
+async function logIn(username, password){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.username.toLowerCase()===(username||'').trim().toLowerCase());
+  if(!account) return {ok:false, error:'No account with that username on this device.'};
+  if(await hashPassword(password) !== account.passwordHash) return {ok:false, error:'Incorrect password.'};
+  data.activeAccountId = account.id;
+  saveAccountsData(data);
+  notifyAccountChanged();
+  return {ok:true, account};
+}
+function logOut(){
+  const data = loadAccountsData();
+  data.activeAccountId = null;
+  saveAccountsData(data);
+  notifyAccountChanged();
+}
+function notifyAccountChanged(){
+  renderAccountBar();
+  window.dispatchEvent(new CustomEvent('colouristic:accountchanged'));
+}
+
+function renderAccountBar(){
+  const bar = document.getElementById('accountBar');
+  if(!bar) return;
+  bar.innerHTML = '';
+  const account = getActiveAccount();
+  const label = document.createElement('span');
+  label.className = 'account-label';
+  if(account){
+    label.textContent = 'Signed in as '+account.username;
+    const switchBtn = document.createElement('button');
+    switchBtn.className = 'iconbtn'; switchBtn.type = 'button';
+    switchBtn.textContent = 'Switch account';
+    switchBtn.addEventListener('click', ()=>openAccountModal('login'));
+    const outBtn = document.createElement('button');
+    outBtn.className = 'iconbtn'; outBtn.type = 'button';
+    outBtn.textContent = 'Log out';
+    outBtn.addEventListener('click', logOut);
+    bar.appendChild(label); bar.appendChild(switchBtn); bar.appendChild(outBtn);
+  } else {
+    label.textContent = 'Not signed in';
+    const inBtn = document.createElement('button');
+    inBtn.className = 'iconbtn'; inBtn.type = 'button';
+    inBtn.textContent = 'Log in';
+    inBtn.addEventListener('click', ()=>openAccountModal('login'));
+    const upBtn = document.createElement('button');
+    upBtn.className = 'iconbtn'; upBtn.type = 'button';
+    upBtn.textContent = 'Sign up';
+    upBtn.addEventListener('click', ()=>openAccountModal('signup'));
+    bar.appendChild(label); bar.appendChild(inBtn); bar.appendChild(upBtn);
+  }
+}
+
+function escAccountModal(e){ if(e.key==='Escape') closeAccountModal(); }
+function closeAccountModal(){
+  const el = document.getElementById('accountModalOverlay');
+  if(el) el.remove();
+  document.removeEventListener('keydown', escAccountModal);
+}
+function openAccountModal(mode){
+  closeAccountModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'account-modal-overlay';
+  overlay.id = 'accountModalOverlay';
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeAccountModal(); });
+
+  const card = document.createElement('div');
+  card.className = 'account-modal-card';
+
+  const tabs = document.createElement('div');
+  tabs.className = 'account-modal-tabs';
+  const loginTab = document.createElement('button');
+  loginTab.type='button'; loginTab.className='mix-tab'; loginTab.textContent='Log in';
+  const signupTab = document.createElement('button');
+  signupTab.type='button'; signupTab.className='mix-tab'; signupTab.textContent='Sign up';
+  tabs.appendChild(loginTab); tabs.appendChild(signupTab);
+
+  const note = document.createElement('p');
+  note.className = 'hint';
+  note.style.margin = '10px 0 0';
+  note.textContent = "This runs entirely in this browser — there's no server, so it keeps profiles separate on this device only. It doesn't protect your data or sync it anywhere else.";
+
+  const fieldsWrap = document.createElement('div');
+  fieldsWrap.className = 'account-modal-fields';
+
+  const userInput = document.createElement('input');
+  userInput.type = 'text'; userInput.className = 'hex-guess-input';
+  userInput.placeholder = 'Username'; userInput.autocomplete = 'username';
+
+  const passInput = document.createElement('input');
+  passInput.type = 'password'; passInput.className = 'hex-guess-input';
+  passInput.placeholder = 'Password';
+
+  const confirmInput = document.createElement('input');
+  confirmInput.type = 'password'; confirmInput.className = 'hex-guess-input';
+  confirmInput.placeholder = 'Confirm password';
+
+  const errorEl = document.createElement('p');
+  errorEl.className = 'account-modal-error';
+  errorEl.style.display = 'none';
+
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'button'; submitBtn.className = 'iconbtn active';
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button'; closeBtn.className = 'iconbtn';
+  closeBtn.textContent = 'Cancel';
+  closeBtn.addEventListener('click', closeAccountModal);
+
+  function setMode(m){
+    mode = m;
+    loginTab.classList.toggle('active', m==='login');
+    signupTab.classList.toggle('active', m==='signup');
+    submitBtn.textContent = m==='login' ? 'Log in' : 'Create account';
+    confirmInput.style.display = m==='signup' ? 'block' : 'none';
+    errorEl.style.display = 'none';
+  }
+  loginTab.addEventListener('click', ()=>setMode('login'));
+  signupTab.addEventListener('click', ()=>setMode('signup'));
+
+  async function submit(){
+    errorEl.style.display = 'none';
+    if(mode==='signup'){
+      if(passInput.value !== confirmInput.value){
+        errorEl.textContent = "Passwords don't match.";
+        errorEl.style.display = 'block';
+        return;
+      }
+      const res = await signUp(userInput.value, passInput.value);
+      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
+    } else {
+      const res = await logIn(userInput.value, passInput.value);
+      if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
+    }
+    closeAccountModal();
+  }
+  submitBtn.addEventListener('click', submit);
+  passInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  confirmInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  actions.style.marginTop = '14px';
+  actions.appendChild(submitBtn);
+  actions.appendChild(closeBtn);
+
+  fieldsWrap.appendChild(userInput);
+  fieldsWrap.appendChild(passInput);
+  fieldsWrap.appendChild(confirmInput);
+
+  card.appendChild(tabs);
+  card.appendChild(note);
+  card.appendChild(fieldsWrap);
+  card.appendChild(errorEl);
+  card.appendChild(actions);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  setMode(mode);
+  document.addEventListener('keydown', escAccountModal);
+  userInput.focus();
+}
+function initAccountControl(){
+  renderAccountBar();
+}
+
+/* ---- Saved palette libraries ---- */
+const LIBRARY_STORAGE_KEY_BASE = 'colouristic.libraries.v1';
+
 function saveLibraryData(data){
-  try{ localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+  try{ localStorage.setItem(namespacedKey(LIBRARY_STORAGE_KEY_BASE), JSON.stringify(data)); }catch(e){}
 }
 
 function loadLibraryData(){
   try{
-    const raw = localStorage.getItem(LIBRARY_STORAGE_KEY);
+    const raw = localStorage.getItem(namespacedKey(LIBRARY_STORAGE_KEY_BASE));
     if(raw){
       const parsed = JSON.parse(raw);
       if(parsed && Array.isArray(parsed.libraries) && parsed.libraries.length) return parsed;
@@ -581,3 +796,4 @@ initCvdControl();
 initGrayscaleControl();
 initLightingControl();
 initTextureControl();
+initAccountControl();
