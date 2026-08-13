@@ -15,14 +15,81 @@
     <p>A colour wheel, palette generator, photo palette, mood finder, face analysis, and a hex-guessing game — all in one place, all running right here in your browser.</p>
   </header>
 
-  <div class="home-layout home-layout-single">
+  <div class="home-layout">
     <div class="auth-card" id="authCard"></div>
+
+    <div class="home-wheel-showcase">
+      <div class="home-wheel-wrap">
+        <div class="home-wheel-pointer"></div>
+        <canvas id="homeWheelCanvas" width="360" height="360" class="home-wheel-canvas"></canvas>
+      </div>
+      <div class="home-wheel-readout">
+        <span class="home-wheel-swatch" id="homeWheelSwatch"></span>
+        <span id="homeWheelLabel">Drag the wheel, or give it a spin.</span>
+      </div>
+      <button type="button" class="iconbtn" id="spinBtn">Give it a spin</button>
+    </div>
   </div>
 
 </div>
 
 <script src="shared.js"></script>
 <script>
+const homeWheelCanvas = document.getElementById('homeWheelCanvas');
+const homeWheelSwatch = document.getElementById('homeWheelSwatch');
+const homeWheelLabel = document.getElementById('homeWheelLabel');
+paintStaticWheel(homeWheelCanvas.getContext('2d'), 360, 55);
+
+let wheelRotation = 0;
+let wheelDragging = false;
+let dragStartAngle = 0;
+let rotationAtDragStart = 0;
+
+function angleFromCenter(clientX, clientY){
+  const rect = homeWheelCanvas.getBoundingClientRect();
+  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
+  return Math.atan2(clientY-cy, clientX-cx) * 180/Math.PI;
+}
+
+function updateWheelReadout(){
+  // The pointer is fixed at the top (12 o'clock); the wheel's own hue-by-angle
+  // math has 0deg (hue 0) at the top before any rotation, so whatever hue is
+  // now sitting under that fixed pointer is just the rotation, inverted.
+  const hue = ((-wheelRotation) % 360 + 360) % 360;
+  const hex = hslToHex(hue, 100, 55);
+  homeWheelSwatch.style.background = hex;
+  homeWheelLabel.textContent = nearestColorName(hex)+' — '+hex.toUpperCase();
+}
+
+function markWheelInteracted(){
+  homeWheelCanvas.classList.add('interacted');
+}
+
+homeWheelCanvas.addEventListener('pointerdown', e=>{
+  wheelDragging = true;
+  markWheelInteracted();
+  homeWheelCanvas.style.transition = 'none';
+  dragStartAngle = angleFromCenter(e.clientX, e.clientY);
+  rotationAtDragStart = wheelRotation;
+  homeWheelCanvas.setPointerCapture(e.pointerId);
+});
+homeWheelCanvas.addEventListener('pointermove', e=>{
+  if(!wheelDragging) return;
+  const a = angleFromCenter(e.clientX, e.clientY);
+  wheelRotation = rotationAtDragStart + (a - dragStartAngle);
+  homeWheelCanvas.style.transform = 'rotate('+wheelRotation+'deg)';
+  updateWheelReadout();
+});
+homeWheelCanvas.addEventListener('pointerup', ()=>{ wheelDragging = false; });
+
+document.getElementById('spinBtn').addEventListener('click', ()=>{
+  markWheelInteracted();
+  wheelRotation += 720 + Math.random()*720;
+  homeWheelCanvas.style.transition = 'transform 2.2s cubic-bezier(.17,.67,.32,1.02)';
+  homeWheelCanvas.style.transform = 'rotate('+wheelRotation+'deg)';
+  setTimeout(updateWheelReadout, 2200);
+});
+
 function nextDestination(){
   const params = new URLSearchParams(location.search);
   return params.get('next') || 'index.html';
