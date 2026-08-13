@@ -651,7 +651,7 @@ label.iconbtn{display:inline-flex;}
   cursor:grab;
   touch-action:none;
   box-shadow:0 0 80px -12px var(--live-color), 0 0 0 1px var(--line-strong);
-  animation:home-wheel-spin 36s linear infinite;
+  animation:home-wheel-spin 21.6s linear infinite;
 }
 .home-wheel-canvas:active{cursor:grabbing;}
 .home-wheel-canvas:hover{animation-play-state:paused;}
