@@ -584,7 +584,21 @@ label.iconbtn{display:inline-flex;}
 .game-score-big{font-family:'Fraunces',serif;font-size:32px;font-weight:500;margin:0;}
 .game-score-note{font-size:13px;color:var(--text-dim);margin:6px 0 0;line-height:1.5;}
 
-.account-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;font-size:12.5px;}
+.account-bar{
+  position:fixed;
+  top:16px;right:20px;
+  z-index:60;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  max-width:min(280px, calc(100vw - 40px));
+  background:rgba(21,20,27,0.88);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:0.5px solid var(--line);
+  border-radius:13px;
+  padding:8px 14px;
+  font-size:12.5px;
+}
+.account-bar:empty{display:none;}
 .account-label{color:var(--text-dim);}
 
 /* ---- home.html: gate + landing page ---- */
