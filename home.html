@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=1">
+<link rel="stylesheet" href="shared.css?v=2">
 </head>
 <body>
 <div class="wrap">
@@ -15,100 +15,16 @@
     <p>A colour wheel, palette generator, photo palette, mood finder, face analysis, and a hex-guessing game — all in one place, all running right here in your browser.</p>
   </header>
 
-  <div class="home-layout">
+  <div class="home-stage">
+    <canvas id="homeWheelCanvas" width="520" height="520" class="home-wheel-canvas"></canvas>
     <div class="auth-card" id="authCard"></div>
-
-    <div class="home-wheel-showcase">
-      <div class="home-wheel-wrap">
-        <div class="home-wheel-pointer"></div>
-        <canvas id="homeWheelCanvas" width="360" height="360" class="home-wheel-canvas"></canvas>
-      </div>
-      <div class="home-wheel-readout">
-        <span class="home-wheel-swatch" id="homeWheelSwatch"></span>
-        <span id="homeWheelLabel">Drag the wheel, or give it a spin.</span>
-      </div>
-      <button type="button" class="iconbtn" id="spinBtn">Give it a spin</button>
-    </div>
   </div>
 
 </div>
 
-<script src="shared.js?v=1"></script>
+<script src="shared.js?v=2"></script>
 <script>
-const homeWheelCanvas = document.getElementById('homeWheelCanvas');
-const homeWheelSwatch = document.getElementById('homeWheelSwatch');
-const homeWheelLabel = document.getElementById('homeWheelLabel');
-paintStaticWheel(homeWheelCanvas.getContext('2d'), 360, 55);
-
-let wheelRotation = 0;
-let wheelDragging = false;
-let dragStartAngle = 0;
-let rotationAtDragStart = 0;
-
-function angleFromCenter(clientX, clientY){
-  const rect = homeWheelCanvas.getBoundingClientRect();
-  const cx = rect.left + rect.width/2, cy = rect.top + rect.height/2;
-  return Math.atan2(clientY-cy, clientX-cx) * 180/Math.PI;
-}
-
-function updateWheelReadout(){
-  // The pointer is fixed at the top (12 o'clock); the wheel's own hue-by-angle
-  // math has 0deg (hue 0) at the top before any rotation, so whatever hue is
-  // now sitting under that fixed pointer is just the rotation, inverted.
-  const hue = ((-wheelRotation) % 360 + 360) % 360;
-  const hex = hslToHex(hue, 100, 55);
-  homeWheelSwatch.style.background = hex;
-  homeWheelLabel.textContent = nearestColorName(hex)+' — '+hex.toUpperCase();
-}
-
-let resumeSpinTimer = null;
-
-function markWheelInteracted(){
-  clearTimeout(resumeSpinTimer);
-  homeWheelCanvas.classList.add('interacted');
-}
-
-// The wheel always spins automatically on its own -- dragging or hitting
-// "Give it a spin" only pauses that for the moment of interaction, then it
-// picks back up again shortly after, rather than stopping for good.
-function resumeAutoSpin(delay){
-  clearTimeout(resumeSpinTimer);
-  resumeSpinTimer = setTimeout(()=>{
-    homeWheelCanvas.classList.remove('interacted');
-    homeWheelCanvas.style.transition = '';
-    homeWheelCanvas.style.transform = '';
-    wheelRotation = 0;
-  }, delay);
-}
-
-homeWheelCanvas.addEventListener('pointerdown', e=>{
-  wheelDragging = true;
-  markWheelInteracted();
-  homeWheelCanvas.style.transition = 'none';
-  dragStartAngle = angleFromCenter(e.clientX, e.clientY);
-  rotationAtDragStart = wheelRotation;
-  homeWheelCanvas.setPointerCapture(e.pointerId);
-});
-homeWheelCanvas.addEventListener('pointermove', e=>{
-  if(!wheelDragging) return;
-  const a = angleFromCenter(e.clientX, e.clientY);
-  wheelRotation = rotationAtDragStart + (a - dragStartAngle);
-  homeWheelCanvas.style.transform = 'rotate('+wheelRotation+'deg)';
-  updateWheelReadout();
-});
-homeWheelCanvas.addEventListener('pointerup', ()=>{
-  wheelDragging = false;
-  resumeAutoSpin(2500);
-});
-
-document.getElementById('spinBtn').addEventListener('click', ()=>{
-  markWheelInteracted();
-  wheelRotation += 720 + Math.random()*720;
-  homeWheelCanvas.style.transition = 'transform 2.2s cubic-bezier(.17,.67,.32,1.02)';
-  homeWheelCanvas.style.transform = 'rotate('+wheelRotation+'deg)';
-  setTimeout(updateWheelReadout, 2200);
-  resumeAutoSpin(3500);
-});
+paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55);
 
 function nextDestination(){
   const params = new URLSearchParams(location.search);
