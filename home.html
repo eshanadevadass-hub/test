@@ -15,12 +15,7 @@
     <p>A colour wheel, palette generator, photo palette, mood finder, face analysis, and a hex-guessing game — all in one place, all running right here in your browser.</p>
   </header>
 
-  <div class="home-layout">
-    <div>
-      <p class="section-title" style="margin-bottom:14px;">What's inside</p>
-      <div class="home-features" id="homeFeatures"></div>
-    </div>
-
+  <div class="home-layout home-layout-single">
     <div class="auth-card" id="authCard"></div>
   </div>
 
@@ -28,33 +23,6 @@
 
 <script src="shared.js"></script>
 <script>
-const FEATURES = [
-  { name:'Colour wheel', color:'violet', desc:"Drag to explore hue and saturation, see paint and light mixing recipes, check contrast live." },
-  { name:'Palette generator', color:'gold', desc:"Build harmony palettes, or split a colour 60/30/10 by proportion instead of hue." },
-  { name:'Photo palette', color:'teal', desc:"Pull a ready-made palette out of any photo, sorted by how much of the image each colour covers." },
-  { name:'Mood finder', color:'sage', desc:"Pick a feeling and get a palette built to convey it, or build one from your own base colours." },
-  { name:'Face analysis', color:'coral', desc:"Scan your skin tone for undertone, depth, season, and a palette matched to you." },
-  { name:'Hex guesser', color:'pink', desc:"Test your eye — guess a colour from its hex code, or the hex code from a colour." },
-  { name:'Library', color:'sky', desc:"Save palettes you've built anywhere in the app, organised into your own libraries." }
-];
-
-const homeFeatures = document.getElementById('homeFeatures');
-FEATURES.forEach(f=>{
-  const card = document.createElement('div');
-  card.className = 'home-feature-card';
-  const dot = document.createElement('span');
-  dot.className = 'home-feature-dot';
-  dot.style.background = 'var(--'+f.color+')';
-  const h3 = document.createElement('h3');
-  h3.textContent = f.name;
-  const p = document.createElement('p');
-  p.textContent = f.desc;
-  card.appendChild(dot);
-  card.appendChild(h3);
-  card.appendChild(p);
-  homeFeatures.appendChild(card);
-});
-
 function nextDestination(){
   const params = new URLSearchParams(location.search);
   return params.get('next') || 'index.html';

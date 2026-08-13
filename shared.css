@@ -615,17 +615,7 @@ label.iconbtn{display:inline-flex;}
   margin:0 auto;
 }
 @media(max-width:760px){ .home-layout{grid-template-columns:1fr;} }
-.home-features{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
-@media(max-width:520px){ .home-features{grid-template-columns:1fr;} }
-.home-feature-card{
-  background:var(--surface);
-  border:0.5px solid var(--line);
-  border-radius:12px;
-  padding:16px;
-}
-.home-feature-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-bottom:10px;}
-.home-feature-card h3{font-family:'Fraunces',serif;font-weight:500;font-size:15px;margin:0 0 4px;}
-.home-feature-card p{font-size:12.5px;color:var(--text-dim);line-height:1.5;margin:0;}
+.home-layout-single{grid-template-columns:1fr;max-width:400px;}
 
 .auth-card{
   background:var(--surface);
