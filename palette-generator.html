@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Palette generator — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=11">
+<link rel="stylesheet" href="shared.css?v=12">
 </head>
 <body>
 <div class="wrap">
@@ -34,6 +34,7 @@
     <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
     <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
     <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+    <a class="tool-nav-link" href="gradient-generator.html"><span class="tool-nav-dot" style="background:var(--accent);"></span>Gradients</a>
   </nav>
 
   <div class="account-bar" id="accountBar"></div>
@@ -133,10 +134,15 @@
     <div class="palette" id="paletteGrid"></div>
     <div class="hint">Click a swatch to copy its hex. Lock a swatch to keep it fixed while randomizing.</div>
     <div id="paletteExportRow"></div>
+
+    <div class="contrast-check" id="paletteContrastCheck" style="display:none;">
+      <p class="section-title" style="margin-bottom:10px;">Contrast between swatches</p>
+      <div id="contrastMatrixRows"></div>
+    </div>
   </div>
 </div>
 
-<script src="shared.js?v=11"></script>
+<script src="shared.js?v=12"></script>
 <script>
 let base = {h:265, s:55, l:55};
 
@@ -421,7 +427,31 @@ function buildPalette(){
     card.appendChild(info);
     paletteGrid.appendChild(card);
   });
+  renderContrastMatrix(colors);
   scheduleStateSync();
+}
+
+function renderContrastMatrix(colors){
+  const section = document.getElementById('paletteContrastCheck');
+  const rows = document.getElementById('contrastMatrixRows');
+  rows.innerHTML = '';
+  for(let i=0;i<colors.length;i++){
+    for(let j=i+1;j<colors.length;j++){
+      const a = colors[i], b = colors[j];
+      const hexA = hslToHex(a.h,a.s,a.l), hexB = hslToHex(b.h,b.s,b.l);
+      const ratio = contrastRatio(hslToRgb(a.h,a.s,a.l), hslToRgb(b.h,b.s,b.l));
+      const level = contrastLevel(ratio);
+      const row = document.createElement('div');
+      row.className = 'contrast-row';
+      row.innerHTML =
+        '<span class="contrast-swatch" style="background:'+hexA+';"></span>'
+        + '<span class="contrast-swatch" style="background:'+hexB+';margin-left:-6px;"></span>'
+        + '<span class="contrast-value">'+ratio.toFixed(2)+':1</span>'
+        + '<span class="contrast-badge'+(level.pass?' pass':' fail')+'">'+level.label+'</span>';
+      rows.appendChild(row);
+    }
+  }
+  section.style.display = colors.length>=2 ? 'block' : 'none';
 }
 
 document.getElementById('shuffleBtn').addEventListener('click', ()=>{

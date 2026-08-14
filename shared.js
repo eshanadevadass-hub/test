@@ -56,6 +56,25 @@ function expandHex3(hex){
   return '#'+hex.slice(1).split('').map(c=>c+c).join('');
 }
 
+/* WCAG 2 contrast math -- shared by the wheel's base-vs-black/white check
+   and the palette generator's all-pairs contrast matrix. */
+function relLuminance(r,g,b){
+  const lin = v=>{ v/=255; return v<=0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+  return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);
+}
+function contrastRatio(rgb1, rgb2){
+  const L1 = relLuminance(rgb1[0],rgb1[1],rgb1[2]);
+  const L2 = relLuminance(rgb2[0],rgb2[1],rgb2[2]);
+  const lighter = Math.max(L1,L2), darker = Math.min(L1,L2);
+  return (lighter+0.05)/(darker+0.05);
+}
+function contrastLevel(ratio){
+  if(ratio>=7) return {label:'AAA', pass:true};
+  if(ratio>=4.5) return {label:'AA', pass:true};
+  if(ratio>=3) return {label:'AA Large', pass:true};
+  return {label:'Fail', pass:false};
+}
+
 function rgbToLab(r,g,b){
   let [R,G,B] = [r,g,b].map(v=>{
     v/=255;

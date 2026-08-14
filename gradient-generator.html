@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('colouristic.accounts.v1');
+    var data = raw ? JSON.parse(raw) : null;
+    if(!data || !data.activeAccountId){
+      location.replace('home.html?next='+encodeURIComponent(location.pathname.split('/').pop()+location.search+location.hash));
+    }
+  }catch(e){}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient generator — Colouristic</title>
+<link rel="stylesheet" href="shared.css?v=12">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>Pick a base colour on the wheel, choose a harmony rule, and the palette builds itself — with the underlying geometry drawn right on the wheel so you can see why the colours work together.</p>
+  </header>
+
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+    <a class="tool-nav-link active" href="gradient-generator.html"><span class="tool-nav-dot" style="background:var(--accent);"></span>Gradients</a>
+  </nav>
+
+  <div class="account-bar" id="accountBar"></div>
+
+  <div class="cvd-control">
+    <label for="cvdSelect" class="cvd-label">Colour-blind preview</label>
+    <select id="cvdSelect" class="cvd-select">
+      <option value="none">Off</option>
+      <option value="protanopia">Protanopia</option>
+      <option value="deuteranopia">Deuteranopia</option>
+      <option value="tritanopia">Tritanopia</option>
+    </select>
+    <button type="button" id="grayscaleToggle" class="iconbtn" style="margin-left:4px;">Grayscale (check value)</button>
+    <label for="lightingSelect" class="cvd-label" style="margin-left:4px;">Lighting</label>
+    <select id="lightingSelect" class="cvd-select" title="Approximate colour-temperature tint — a simplified per-channel simulation, not a full spectral render.">
+      <option value="none">Off</option>
+      <option value="warm">Warm (~2700K)</option>
+      <option value="daylight">Daylight (~5500K)</option>
+      <option value="cool">Cool (~9000K)</option>
+    </select>
+    <label for="textureSelect" class="cvd-label" style="margin-left:4px;">Texture</label>
+    <select id="textureSelect" class="cvd-select" title="Overlay swatches with a fabric weave or paint-grain texture instead of a flat colour.">
+      <option value="none">Off</option>
+      <option value="fur">Faux fur</option>
+      <option value="cotton">Cotton</option>
+      <option value="satin">Satin</option>
+      <option value="paint">Paint grain</option>
+    </select>
+  </div>
+
+  <section class="panel panel-gradient">
+    <p class="section-title">Gradient generator</p>
+    <p class="face-intro">Build a CSS gradient from your own colours — pull them from the wheel, the eyedropper, or your recently used colours.</p>
+
+    <div class="game-tabs" id="gradientTypeTabs">
+      <button class="game-tab active" data-type="linear" type="button">Linear</button>
+      <button class="game-tab" data-type="radial" type="button">Radial</button>
+    </div>
+
+    <div class="slider-row" id="angleRow" style="max-width:320px;margin-bottom:20px;">
+      <div class="slider-label"><span>Angle</span><span id="angleVal">90&deg;</span></div>
+      <input type="range" id="angleSlider" min="0" max="359" value="90" step="1">
+    </div>
+
+    <div class="gradient-preview cvd-target" id="gradientPreview"></div>
+
+    <div class="gradient-stops" id="gradientStops"></div>
+
+    <div class="game-actions">
+      <button type="button" class="iconbtn" id="addStopBtn">Add colour</button>
+      <button type="button" class="iconbtn" id="eyedropperBtn" title="Pick a colour from anywhere on your screen">Eyedropper</button>
+    </div>
+
+    <div class="gradient-css-row">
+      <code class="gradient-css-code" id="gradientCssCode"></code>
+    </div>
+
+    <div class="game-actions">
+      <button type="button" class="iconbtn" id="copyCssBtn">Copy CSS</button>
+      <button type="button" class="iconbtn" id="copyHexListBtn">Copy hex list</button>
+      <button type="button" class="iconbtn" id="downloadPngBtn">Download PNG</button>
+    </div>
+  </section>
+</div>
+
+<script src="shared.js?v=12"></script>
+<script>
+const MAX_STOPS = 6;
+const gradientPreview = document.getElementById('gradientPreview');
+const gradientStopsEl = document.getElementById('gradientStops');
+const gradientCssCode = document.getElementById('gradientCssCode');
+const angleRow = document.getElementById('angleRow');
+const angleSlider = document.getElementById('angleSlider');
+const angleVal = document.getElementById('angleVal');
+const addStopBtn = document.getElementById('addStopBtn');
+const copyCssBtn = document.getElementById('copyCssBtn');
+const copyHexListBtn = document.getElementById('copyHexListBtn');
+const downloadPngBtn = document.getElementById('downloadPngBtn');
+
+let stops = [{hex:'#7C5CFF'}, {hex:'#FF6A3D'}];
+let activeStopIndex = 0;
+let gradientType = 'linear';
+let angle = 90;
+
+function flash(btn, label){
+  const original = btn.textContent;
+  btn.textContent = label;
+  setTimeout(()=>{ btn.textContent = original; }, 1200);
+}
+
+function buildGradientCss(){
+  const hexes = stops.map(s=>s.hex);
+  return gradientType==='linear'
+    ? 'linear-gradient('+angle+'deg, '+hexes.join(', ')+')'
+    : 'radial-gradient(circle, '+hexes.join(', ')+')';
+}
+
+function updatePreview(){
+  const css = buildGradientCss();
+  gradientPreview.style.background = css;
+  gradientCssCode.textContent = 'background: '+css+';';
+}
+
+function setActiveStop(i){
+  activeStopIndex = i;
+  document.querySelectorAll('.gradient-stop').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+}
+
+function applyStopHexInput(i, input){
+  let val = input.value.trim();
+  if(val && val[0]!=='#') val = '#'+val;
+  let normalized = null;
+  if(/^#[0-9a-fA-F]{6}$/.test(val)) normalized = val;
+  else if(/^#[0-9a-fA-F]{3}$/.test(val)) normalized = expandHex3(val);
+  if(normalized){
+    stops[i].hex = normalized.toUpperCase();
+    document.querySelectorAll('.gradient-stop')[i].querySelector('.gradient-stop-swatch').style.background = stops[i].hex;
+    updatePreview();
+  }
+  input.value = stops[i].hex;
+}
+
+function renderStops(){
+  gradientStopsEl.innerHTML = '';
+  stops.forEach((s,i)=>{
+    const row = document.createElement('div');
+    row.className = 'gradient-stop'+(i===activeStopIndex?' active':'');
+
+    const swatch = document.createElement('div');
+    swatch.className = 'gradient-stop-swatch cvd-target';
+    swatch.style.background = s.hex;
+    swatch.title = 'Make this the active colour';
+    swatch.addEventListener('click', ()=>setActiveStop(i));
+
+    const hexInput = document.createElement('input');
+    hexInput.type = 'text';
+    hexInput.className = 'hex-guess-input';
+    hexInput.spellcheck = false;
+    hexInput.autocomplete = 'off';
+    hexInput.value = s.hex;
+    hexInput.addEventListener('focus', ()=>setActiveStop(i));
+    hexInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ applyStopHexInput(i, hexInput); hexInput.blur(); } });
+    hexInput.addEventListener('blur', ()=>applyStopHexInput(i, hexInput));
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'gradient-stop-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove this colour';
+    removeBtn.disabled = stops.length<=2;
+    removeBtn.addEventListener('click', ()=>{
+      if(stops.length<=2) return;
+      stops.splice(i,1);
+      if(activeStopIndex>=stops.length) activeStopIndex = stops.length-1;
+      renderStops();
+      updatePreview();
+    });
+
+    row.appendChild(swatch);
+    row.appendChild(hexInput);
+    row.appendChild(removeBtn);
+    gradientStopsEl.appendChild(row);
+  });
+  addStopBtn.disabled = stops.length>=MAX_STOPS;
+}
+
+document.querySelectorAll('#gradientTypeTabs .game-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    gradientType = btn.dataset.type;
+    document.querySelectorAll('#gradientTypeTabs .game-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    angleRow.style.display = gradientType==='linear' ? '' : 'none';
+    updatePreview();
+  });
+});
+
+angleSlider.addEventListener('input', e=>{
+  angle = parseInt(e.target.value, 10);
+  angleVal.textContent = angle+'°';
+  updatePreview();
+});
+
+addStopBtn.addEventListener('click', ()=>{
+  if(stops.length>=MAX_STOPS) return;
+  const h = Math.random()*360;
+  stops.push({hex: hslToHex(h, 55+Math.random()*30, 45+Math.random()*20).toUpperCase()});
+  activeStopIndex = stops.length-1;
+  renderStops();
+  updatePreview();
+});
+
+copyCssBtn.addEventListener('click', ()=>{
+  navigator.clipboard.writeText('background: '+buildGradientCss()+';');
+  flash(copyCssBtn, 'Copied');
+});
+copyHexListBtn.addEventListener('click', ()=>{
+  navigator.clipboard.writeText(stops.map(s=>s.hex.toUpperCase()).join(', '));
+  flash(copyHexListBtn, 'Copied');
+});
+
+function canvasGradientFill(ctx, w, h){
+  if(gradientType==='linear'){
+    const rad = angle*Math.PI/180;
+    const dx = Math.sin(rad), dy = -Math.cos(rad);
+    const cx = w/2, cy = h/2;
+    const len = Math.sqrt(w*w+h*h)/2;
+    const grad = ctx.createLinearGradient(cx-dx*len, cy-dy*len, cx+dx*len, cy+dy*len);
+    stops.forEach((s,i)=>grad.addColorStop(stops.length>1 ? i/(stops.length-1) : 0, s.hex));
+    return grad;
+  }
+  const grad = ctx.createRadialGradient(w/2,h/2,0, w/2,h/2, Math.max(w,h)/2);
+  stops.forEach((s,i)=>grad.addColorStop(stops.length>1 ? i/(stops.length-1) : 0, s.hex));
+  return grad;
+}
+downloadPngBtn.addEventListener('click', ()=>{
+  const w = 800, h = 400;
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = canvasGradientFill(ctx, w, h);
+  ctx.fillRect(0, 0, w, h);
+  canvas.toBlob(blob=>{
+    if(blob) triggerDownload(blob, 'colouristic-gradient.png');
+  });
+});
+
+window.applyRecentColor = function(hex){
+  stops[activeStopIndex].hex = hex.toUpperCase();
+  renderStops();
+  updatePreview();
+};
+initEyedropperButton('eyedropperBtn');
+
+renderStops();
+updatePreview();
+</script>
+</body>
+</html>
