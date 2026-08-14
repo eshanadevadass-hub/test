@@ -619,8 +619,8 @@ label.iconbtn{display:inline-flex;}
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:460px;height:460px;
-  max-width:min(85vw, 460px);
+  width:400px;height:400px;
+  max-width:min(85vw, 400px);
   aspect-ratio:1/1;
   border-radius:50%;
   box-shadow:0 0 110px -8px var(--live-color);
