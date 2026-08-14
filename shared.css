@@ -670,7 +670,7 @@ label.iconbtn{display:inline-flex;}
   transition:transform .15s ease;
 }
 .recent-color-chip:hover{transform:scale(1.18);}
-.recent-color-chip.copied-pulse{animation:recent-chip-pulse .5s ease;}
+.recent-color-chip.chip-pulse{animation:recent-chip-pulse .5s ease;}
 @keyframes recent-chip-pulse{
   0%{box-shadow:0 0 0 0 rgba(255,255,255,0.5);}
   100%{box-shadow:0 0 0 8px rgba(255,255,255,0);}

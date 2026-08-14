@@ -604,7 +604,11 @@ function deletePaletteFromLibrary(libraryId, paletteId){
 /* ---- Recently used colours tray ----
    A small floating strip, injected on every tool page (not home.html), that
    remembers the last few colours picked or copied anywhere in the app so
-   they're one click away in whichever tool you're in next. */
+   they're one click away in whichever tool you're in next. Clicking a chip
+   hands the hex to the current page's own applyRecentColor, if it defines
+   one (each tool decides what "select" means for itself -- set the wheel's
+   base colour, drop into a mood-finder slot, jump to the wheel, etc.).
+   Pages that don't define one just get the hex copied to the clipboard. */
 const RECENT_COLORS_KEY_BASE = 'colouristic.recentColors.v1';
 const MAX_RECENT_COLORS = 10;
 
@@ -639,11 +643,12 @@ function renderRecentColorsTray(){
     const chip = document.createElement('div');
     chip.className = 'recent-color-chip';
     chip.style.background = hex;
-    chip.title = hex+' — click to copy';
+    chip.title = hex+' — click to use';
     chip.addEventListener('click', ()=>{
-      navigator.clipboard.writeText(hex);
-      chip.classList.add('copied-pulse');
-      setTimeout(()=>chip.classList.remove('copied-pulse'), 500);
+      if(typeof window.applyRecentColor === 'function') window.applyRecentColor(hex);
+      else navigator.clipboard.writeText(hex);
+      chip.classList.add('chip-pulse');
+      setTimeout(()=>chip.classList.remove('chip-pulse'), 500);
     });
     chipsWrap.appendChild(chip);
   });
