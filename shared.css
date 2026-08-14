@@ -596,10 +596,37 @@ label.iconbtn{display:inline-flex;}
   padding:6px 14px;cursor:pointer;
 }
 .game-tab.active{background:color-mix(in srgb, var(--pink) 20%, var(--surface-2));border-color:var(--pink);color:var(--text);}
-.game-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.game-tab:disabled{opacity:0.4;cursor:not-allowed;}
+.game-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:10px;margin-bottom:20px;}
 .game-stat{background:var(--surface-2);border-radius:10px;padding:12px 8px;text-align:center;}
 .game-stat-val{display:block;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;color:var(--text);}
 .game-stat-label{display:block;font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
+
+.achievements-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+.achievement-badge{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line-strong);
+  background:var(--surface-2);
+  font-size:11px;
+  color:var(--text-faint);
+  opacity:0.45;
+  transition:opacity .2s ease, border-color .2s ease, background .2s ease;
+}
+.achievement-badge .a-icon{font-size:13px;}
+.achievement-badge.unlocked{
+  opacity:1;
+  color:var(--text);
+  border-color:var(--pink);
+  background:color-mix(in srgb, var(--pink) 16%, var(--surface-2));
+}
+.achievement-badge.pop{animation:achievement-pop .5s ease;}
+@keyframes achievement-pop{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.18);}
+  100%{transform:scale(1);}
+}
 .game-mode-block{display:none;}
 .game-mode-block.active{display:block;}
 .game-target-label{font-size:13px;color:var(--text-dim);margin:0 0 10px;}

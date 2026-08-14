@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hex guesser — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=8">
+<link rel="stylesheet" href="shared.css?v=9">
 </head>
 <body>
 <div class="wrap">
@@ -68,17 +68,30 @@
     <p class="section-title">Hex guesser</p>
     <p class="face-intro">Test your eye — switch modes to guess a colour from its hex code, or guess the hex code from a colour.</p>
 
-    <div class="game-tabs">
+    <div class="game-tabs" id="difficultyTabs">
+      <button class="game-tab" data-difficulty="easy" type="button">Easy</button>
+      <button class="game-tab active" data-difficulty="medium" type="button">Medium</button>
+      <button class="game-tab" data-difficulty="hard" type="button">Hard</button>
+    </div>
+
+    <div class="game-tabs" id="modeTabs">
       <button class="game-tab active" data-mode="wheel" type="button">Hex &#8594; wheel</button>
       <button class="game-tab" data-mode="hex" type="button">Colour &#8594; hex</button>
+    </div>
+
+    <div class="game-actions" style="margin-top:0;margin-bottom:18px;">
+      <button class="iconbtn" id="dailyChallengeBtn" type="button">Daily challenge</button>
     </div>
 
     <div class="game-stats">
       <div class="game-stat"><span class="game-stat-val" id="gameScoreVal">—</span><span class="game-stat-label">Last score</span></div>
       <div class="game-stat"><span class="game-stat-val" id="gameAvgVal">—</span><span class="game-stat-label">Average</span></div>
       <div class="game-stat"><span class="game-stat-val" id="gameStreakVal">0</span><span class="game-stat-label">Streak</span></div>
+      <div class="game-stat"><span class="game-stat-val" id="gameBestStreakVal">0</span><span class="game-stat-label">Best streak</span></div>
       <div class="game-stat"><span class="game-stat-val" id="gameRoundVal">0</span><span class="game-stat-label">Rounds</span></div>
     </div>
+
+    <div class="achievements-row" id="achievementsRow"></div>
 
     <div id="wheelModeUI" class="game-mode-block active">
       <p class="game-target-label">Match this hex on the wheel:</p>
@@ -111,7 +124,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=8"></script>
+<script src="shared.js?v=9"></script>
 <script>
 const gameCanvas = document.getElementById('gameWheelCanvas');
 const gameCtx = gameCanvas.getContext('2d');
@@ -125,6 +138,10 @@ const wheelTargetHex = document.getElementById('wheelTargetHex');
 const hexTargetSwatch = document.getElementById('hexTargetSwatch');
 const hexGuessInput = document.getElementById('hexGuessInput');
 const gameResult = document.getElementById('gameResult');
+const nextRoundBtn = document.getElementById('nextRoundBtn');
+const submitGuessBtn = document.getElementById('submitGuessBtn');
+const dailyChallengeBtn = document.getElementById('dailyChallengeBtn');
+const achievementsRow = document.getElementById('achievementsRow');
 
 let gameMode = 'wheel';
 let gameTarget = null;
@@ -132,11 +149,37 @@ let gameGuess = {h:0, s:0, l:55};
 let gameRounds = 0;
 let gameTotalScore = 0;
 let gameStreak = 0;
+let gameBestStreak = 0;
+let gameAchievements = {};
+let gameDaily = null;
+let currentDifficulty = 'medium';
+let dailyMode = false;
+
+const DIFFICULTIES = {
+  easy:   { label:'Easy',   sRange:[55,90], lRange:[35,65] },
+  medium: { label:'Medium', sRange:[30,90], lRange:[25,75] },
+  hard:   { label:'Hard',   sRange:[10,45], lRange:[15,85] },
+};
+
+const ACHIEVEMENTS = [
+  { id:'first-guess', icon:'\u{1F3AF}', name:'First guess', desc:'Play your first round.', check: s=>s.rounds>=1 },
+  { id:'perfect', icon:'\u{2728}', name:'Perfect eye', desc:'Score exactly 100 on a round.', check: s=>s.hadPerfect },
+  { id:'hot-streak', icon:'\u{1F525}', name:'Hot streak', desc:'Get 5 good guesses in a row.', check: s=>s.bestStreak>=5 },
+  { id:'on-fire', icon:'\u{1F680}', name:'On fire', desc:'Get 10 good guesses in a row.', check: s=>s.bestStreak>=10 },
+  { id:'century', icon:'\u{1F4AF}', name:'Century', desc:'Play 100 rounds.', check: s=>s.rounds>=100 },
+  { id:'hard-mode', icon:'\u{1F480}', name:'Hard mode', desc:'Score 90+ on Hard difficulty.', check: s=>s.hadHardWin },
+];
 
 const GAME_STORAGE_KEY_BASE = 'colouristic.gameStats.v1';
 function saveGameState(lastScore){
   try{
-    localStorage.setItem(namespacedKey(GAME_STORAGE_KEY_BASE), JSON.stringify({rounds:gameRounds, totalScore:gameTotalScore, streak:gameStreak, lastScore}));
+    localStorage.setItem(namespacedKey(GAME_STORAGE_KEY_BASE), JSON.stringify({
+      rounds:gameRounds, totalScore:gameTotalScore, streak:gameStreak, lastScore,
+      bestStreak:gameBestStreak, achievements:gameAchievements, daily:gameDaily,
+      difficulty:currentDifficulty,
+      hadPerfect: gameAchievements['perfect']===true || lastScore===100,
+      hadHardWin: gameAchievements['hard-mode']===true || (currentDifficulty==='hard' && lastScore>=90),
+    }));
   }catch(e){}
 }
 function loadGameState(){
@@ -145,15 +188,45 @@ function loadGameState(){
     return raw ? JSON.parse(raw) : null;
   }catch(e){ return null; }
 }
+function renderAchievements(justUnlocked){
+  achievementsRow.innerHTML = '';
+  ACHIEVEMENTS.forEach(a=>{
+    const unlocked = !!gameAchievements[a.id];
+    const badge = document.createElement('div');
+    badge.className = 'achievement-badge'+(unlocked?' unlocked':'')+(justUnlocked && justUnlocked.includes(a.id)?' pop':'');
+    badge.title = a.name+' — '+a.desc;
+    badge.innerHTML = '<span class="a-icon">'+a.icon+'</span><span>'+a.name+'</span>';
+    achievementsRow.appendChild(badge);
+  });
+}
+function checkAchievements(stats){
+  const justUnlocked = [];
+  ACHIEVEMENTS.forEach(a=>{
+    if(!gameAchievements[a.id] && a.check(stats)){
+      gameAchievements[a.id] = true;
+      justUnlocked.push(a.id);
+    }
+  });
+  return justUnlocked;
+}
 function restoreGameState(){
   const saved = loadGameState();
   gameRounds = saved ? (saved.rounds || 0) : 0;
   gameTotalScore = saved ? (saved.totalScore || 0) : 0;
   gameStreak = saved ? (saved.streak || 0) : 0;
+  gameBestStreak = saved ? (saved.bestStreak || 0) : 0;
+  gameAchievements = saved && saved.achievements ? saved.achievements : {};
+  gameDaily = saved && saved.daily ? saved.daily : null;
+  currentDifficulty = saved && saved.difficulty ? saved.difficulty : 'medium';
   document.getElementById('gameScoreVal').textContent = saved && saved.lastScore!=null ? saved.lastScore : '—';
   document.getElementById('gameAvgVal').textContent = gameRounds>0 ? Math.round(gameTotalScore/gameRounds) : '—';
   document.getElementById('gameStreakVal').textContent = gameStreak;
+  document.getElementById('gameBestStreakVal').textContent = gameBestStreak;
   document.getElementById('gameRoundVal').textContent = gameRounds;
+  document.querySelectorAll('#difficultyTabs .game-tab').forEach(b=>{
+    b.classList.toggle('active', b.dataset.difficulty===currentDifficulty);
+  });
+  renderAchievements();
 }
 window.addEventListener('colouristic:accountchanged', restoreGameState);
 
@@ -202,10 +275,10 @@ gameLightSlider.addEventListener('input', e=>{
   paintStaticWheel(gameCtx, gameSize, gameGuess.l);
 });
 
-document.querySelectorAll('.game-tab').forEach(btn=>{
+document.querySelectorAll('#modeTabs .game-tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     gameMode = btn.dataset.mode;
-    document.querySelectorAll('.game-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('#modeTabs .game-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     wheelModeUI.classList.toggle('active', gameMode==='wheel');
     hexModeUI.classList.toggle('active', gameMode==='hex');
@@ -213,8 +286,80 @@ document.querySelectorAll('.game-tab').forEach(btn=>{
   });
 });
 
+document.querySelectorAll('#difficultyTabs .game-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    currentDifficulty = btn.dataset.difficulty;
+    document.querySelectorAll('#difficultyTabs .game-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    saveGameState(gameRounds>0 ? document.getElementById('gameScoreVal').textContent : null);
+    if(!dailyMode) startNewRound();
+  });
+});
+
+function todayDateStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+/* Deterministic PRNG (mulberry32, seeded from a string hash) so the same
+   date always produces the same target colour -- that's what makes it a
+   "daily" challenge rather than just another random round. */
+function seededRandom(seedStr){
+  let h = 0;
+  for(let i=0;i<seedStr.length;i++){ h = Math.imul(31,h) + seedStr.charCodeAt(i) | 0; }
+  return function(){
+    h |= 0; h = h + 0x6D2B79F5 | 0;
+    let t = Math.imul(h ^ h >>> 15, 1 | h);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function dailyTargetColor(){
+  const rand = seededRandom('colouristic-daily-'+todayDateStr());
+  return { h: rand()*360, s: 30+rand()*60, l: 25+rand()*50 };
+}
+
+dailyChallengeBtn.addEventListener('click', ()=>{
+  dailyMode = !dailyMode;
+  dailyChallengeBtn.classList.toggle('active', dailyMode);
+  dailyChallengeBtn.textContent = dailyMode ? 'Back to practice' : 'Daily challenge';
+  // difficulty only affects randomised practice rounds -- the daily target
+  // is the same fixed colour for everyone regardless of tier, so grey the
+  // tabs out rather than let them imply they'll change anything.
+  document.querySelectorAll('#difficultyTabs .game-tab').forEach(b=>{ b.disabled = dailyMode; });
+  startNewRound();
+});
+
+function showDailyAlreadyPlayed(daily){
+  gameResult.innerHTML = '<p class="game-score-note">You already played today\'s daily challenge — you scored <b>'+daily.score+'</b>/100 on <b>'+daily.hex+'</b>. Come back tomorrow for a new one.</p>';
+  gameResult.style.display = 'block';
+  submitGuessBtn.disabled = true;
+  nextRoundBtn.style.display = 'none';
+}
+
 function startNewRound(){
-  gameTarget = {h: Math.random()*360, s: 30+Math.random()*60, l: 25+Math.random()*50};
+  nextRoundBtn.style.display = '';
+  submitGuessBtn.disabled = false;
+
+  if(dailyMode){
+    const today = todayDateStr();
+    if(gameDaily && gameDaily.date===today){
+      gameTarget = null;
+      showDailyAlreadyPlayed(gameDaily);
+      if(gameMode==='wheel') wheelTargetHex.textContent = '—';
+      else hexTargetSwatch.style.background = 'var(--surface-2)';
+      return;
+    }
+    gameTarget = dailyTargetColor();
+    nextRoundBtn.style.display = 'none';
+  } else {
+    const range = DIFFICULTIES[currentDifficulty];
+    gameTarget = {
+      h: Math.random()*360,
+      s: range.sRange[0]+Math.random()*(range.sRange[1]-range.sRange[0]),
+      l: range.lRange[0]+Math.random()*(range.lRange[1]-range.lRange[0])
+    };
+  }
+
   gameResult.style.display = 'none';
   if(gameMode==='wheel'){
     wheelTargetHex.textContent = hslToHex(gameTarget.h, gameTarget.s, gameTarget.l).toUpperCase();
@@ -265,11 +410,25 @@ function submitGuess(){
   gameRounds++;
   gameTotalScore += score;
   gameStreak = score>=85 ? gameStreak+1 : 0;
+  if(gameStreak > gameBestStreak) gameBestStreak = gameStreak;
+
+  if(dailyMode){
+    gameDaily = {date: todayDateStr(), score, hex: targetHexStr};
+  }
+
+  const justUnlocked = checkAchievements({
+    rounds: gameRounds,
+    bestStreak: gameBestStreak,
+    hadPerfect: score===100,
+    hadHardWin: currentDifficulty==='hard' && score>=90,
+  });
 
   document.getElementById('gameScoreVal').textContent = score;
   document.getElementById('gameAvgVal').textContent = Math.round(gameTotalScore/gameRounds);
   document.getElementById('gameStreakVal').textContent = gameStreak;
+  document.getElementById('gameBestStreakVal').textContent = gameBestStreak;
   document.getElementById('gameRoundVal').textContent = gameRounds;
+  renderAchievements(justUnlocked);
   saveGameState(score);
 
   let verdict;
@@ -279,18 +438,25 @@ function submitGuess(){
   else if(score>=40) verdict = 'Getting there.';
   else verdict = 'Way off — try the next one.';
 
-  gameResult.innerHTML =
+  let resultHtml =
     '<div class="game-result-row">'
       + '<div><div class="game-result-swatch cvd-target" style="background:'+targetHexStr+';"></div><p class="game-result-swatch-label">Target</p></div>'
       + '<div><div class="game-result-swatch cvd-target" style="background:'+guessHexStr+';"></div><p class="game-result-swatch-label">Your guess</p></div>'
       + '<div><p class="game-score-big">'+score+'</p><p class="game-score-note">out of 100</p></div>'
     + '</div>'
     + '<p class="game-score-note">Target was '+targetHexStr+', you guessed '+guessHexStr+'. '+verdict+'</p>';
+  if(dailyMode) resultHtml += '<p class="game-score-note">That\'s today\'s daily challenge done — come back tomorrow for a new colour.</p>';
+  gameResult.innerHTML = resultHtml;
   gameResult.style.display = 'block';
+
+  if(dailyMode){
+    submitGuessBtn.disabled = true;
+    nextRoundBtn.style.display = 'none';
+  }
 }
 
-document.getElementById('submitGuessBtn').addEventListener('click', submitGuess);
-document.getElementById('nextRoundBtn').addEventListener('click', startNewRound);
+submitGuessBtn.addEventListener('click', submitGuess);
+nextRoundBtn.addEventListener('click', startNewRound);
 hexGuessInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submitGuess(); });
 
 restoreGameState();
