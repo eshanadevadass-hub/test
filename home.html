@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=3">
+<link rel="stylesheet" href="shared.css?v=4">
 </head>
 <body>
 <div class="wrap">
@@ -22,9 +22,53 @@
 
 </div>
 
-<script src="shared.js?v=3"></script>
+<script src="shared.js?v=4"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55);
+
+/* Floating swatch particles: small chips in real colours pulled from the
+   app's own named-colour list, drifting slowly behind everything else. */
+(function(){
+  const layer = document.createElement('div');
+  layer.className = 'home-particles';
+  layer.setAttribute('aria-hidden', 'true');
+  document.body.insertBefore(layer, document.body.firstChild);
+
+  const PARTICLE_COUNT = 16;
+  for(let i=0; i<PARTICLE_COUNT; i++){
+    const c = COLOR_NAMES[Math.floor(Math.random()*COLOR_NAMES.length)];
+    const size = 14 + Math.random()*22;
+    const duration = 14 + Math.random()*18;
+    const el = document.createElement('div');
+    el.className = 'home-particle';
+    el.style.background = hslToHex(c.h, c.s, c.l);
+    el.style.width = size+'px';
+    el.style.height = size+'px';
+    el.style.left = Math.random()*100+'%';
+    el.style.top = Math.random()*100+'%';
+    el.style.opacity = (0.28 + Math.random()*0.3).toFixed(2);
+    el.style.animationDuration = duration+'s';
+    el.style.animationDelay = (-Math.random()*duration)+'s';
+    layer.appendChild(el);
+  }
+})();
+
+/* Cursor-reactive glow: an extra radial-gradient layer on the body background
+   that follows the pointer, on top of the page's existing static gradients. */
+(function(){
+  document.body.classList.add('home-glow');
+  let lastX = 50, lastY = 38, raf = null;
+  function apply(){
+    document.body.style.setProperty('--mx', lastX.toFixed(1)+'%');
+    document.body.style.setProperty('--my', lastY.toFixed(1)+'%');
+    raf = null;
+  }
+  document.addEventListener('mousemove', e=>{
+    lastX = e.clientX/window.innerWidth*100;
+    lastY = e.clientY/window.innerHeight*100;
+    if(!raf) raf = requestAnimationFrame(apply);
+  });
+})();
 
 function nextDestination(){
   const params = new URLSearchParams(location.search);

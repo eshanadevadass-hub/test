@@ -38,6 +38,19 @@ body{
   padding:48px 24px 80px;
   min-height:100vh;
 }
+/* home.html only (class added by its own script) -- an extra gradient layer
+   ahead of the four static ones above, following the cursor via --mx/--my.
+   Duplicated here rather than folded into the base body rule so every other
+   page's background is untouched. */
+body.home-glow{
+  background:
+    radial-gradient(560px circle at var(--mx,50%) var(--my,38%), rgba(155,143,224,0.20), transparent 60%),
+    radial-gradient(ellipse 760px 480px at 8% -8%, rgba(155,143,224,0.16), transparent),
+    radial-gradient(ellipse 620px 420px at 96% 18%, rgba(239,139,107,0.10), transparent),
+    radial-gradient(ellipse 700px 520px at 88% 92%, rgba(79,201,174,0.10), transparent),
+    radial-gradient(ellipse 500px 400px at 4% 78%, rgba(229,143,189,0.07), transparent),
+    var(--bg);
+}
 
 .wrap{max-width:1040px;margin:0 auto;}
 
@@ -602,6 +615,26 @@ label.iconbtn{display:inline-flex;}
 .account-label{color:var(--text-dim);}
 
 /* ---- home.html: gate + landing page ---- */
+.home-particles{
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  overflow:hidden;
+  pointer-events:none;
+}
+.home-particle{
+  position:absolute;
+  border-radius:7px;
+  animation-name:home-particle-float;
+  animation-timing-function:ease-in-out;
+  animation-iteration-count:infinite;
+  will-change:transform;
+}
+@keyframes home-particle-float{
+  0%{transform:translate(0,0) rotate(0deg);}
+  50%{transform:translate(14px,-28px) rotate(10deg);}
+  100%{transform:translate(0,0) rotate(0deg);}
+}
 .home-hero{max-width:640px;margin:0 auto 44px;text-align:center;}
 .home-hero .eyebrow{justify-content:center;}
 .home-hero h1{margin-left:auto;margin-right:auto;}
