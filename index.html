@@ -18,7 +18,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour wheel &amp; palette generator</title>
-<link rel="stylesheet" href="shared.css?v=9">
+<link rel="stylesheet" href="shared.css?v=10">
 </head>
 <body>
 <div class="wrap">
@@ -94,6 +94,7 @@
         <div id="baseHsl">hsl(0, 0%, 0%)</div>
         <div id="baseName" style="font-style:italic;"></div>
       </div>
+      <button type="button" class="iconbtn" id="eyedropperBtn" style="margin-left:auto;" title="Pick a colour from anywhere on your screen">Eyedropper</button>
     </div>
 
     <div class="mix-guide">
@@ -179,7 +180,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=9"></script>
+<script src="shared.js?v=10"></script>
 <script>
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
@@ -409,6 +410,8 @@ window.applyRecentColor = function(hex){
   baseHex.value = hex;
   applyHexInput();
 };
+
+initEyedropperButton('eyedropperBtn');
 
 let currentMedium = 'paint';
 

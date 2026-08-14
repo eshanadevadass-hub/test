@@ -686,6 +686,34 @@ function initRecentColorsTray(){
   renderRecentColorsTray();
 }
 
+/* ---- Eyedropper ----
+   Wraps the browser's native EyeDropper API (Chromium only, as of writing)
+   so a page just drops a button with a known id in its markup and calls
+   this once. Picking a colour reuses the same "what does selecting mean
+   here" hook the recent-colours tray uses (window.applyRecentColor), so
+   there's nothing page-specific to write beyond that. Hides the button
+   entirely on browsers that don't support the API rather than showing
+   something that can only ever fail. */
+function initEyedropperButton(buttonId){
+  const btn = document.getElementById(buttonId);
+  if(!btn) return;
+  if(!('EyeDropper' in window)){
+    btn.style.display = 'none';
+    return;
+  }
+  btn.addEventListener('click', async ()=>{
+    try{
+      const result = await new EyeDropper().open();
+      const hex = result.sRGBHex.toUpperCase();
+      addRecentColor(hex);
+      if(typeof window.applyRecentColor === 'function') window.applyRecentColor(hex);
+      else navigator.clipboard.writeText(hex);
+    }catch(e){
+      // AbortError when the user cancels (Escape / click elsewhere) -- not a real error.
+    }
+  });
+}
+
 function attachExportButtons(containerId, gridId, filenameBase, pdfTitle, defaultPaletteName){
   const container = document.getElementById(containerId);
   if(!container) return;

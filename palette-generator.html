@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Palette generator — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=9">
+<link rel="stylesheet" href="shared.css?v=10">
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +83,7 @@
             <div id="baseName" style="font-style:italic;"></div>
           </div>
           <a class="iconbtn" id="wheelLink" href="index.html" style="margin-left:auto;">Open full-size wheel</a>
+          <button type="button" class="iconbtn" id="eyedropperBtn" title="Pick a colour from anywhere on your screen">Eyedropper</button>
         </div>
       </div>
     </div>
@@ -135,7 +136,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=9"></script>
+<script src="shared.js?v=10"></script>
 <script>
 let base = {h:265, s:55, l:55};
 
@@ -244,6 +245,8 @@ window.applyRecentColor = function(hex){
   baseHex.value = hex;
   applyHexInput();
 };
+
+initEyedropperButton('eyedropperBtn');
 
 function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
 
