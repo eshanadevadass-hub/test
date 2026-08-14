@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=4">
+<link rel="stylesheet" href="shared.css?v=5">
 </head>
 <body>
 <div class="wrap">
@@ -22,7 +22,7 @@
 
 </div>
 
-<script src="shared.js?v=4"></script>
+<script src="shared.js?v=5"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55);
 
@@ -54,19 +54,44 @@ paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 52
 })();
 
 /* Cursor-reactive glow: an extra radial-gradient layer on the body background
-   that follows the pointer, on top of the page's existing static gradients. */
+   that follows the pointer, colour-cycled via --hue, on top of the page's
+   existing static gradients. Also spawns small blurred dots on mousemove
+   that fade and shrink to leave a multicoloured trail behind the cursor. */
 (function(){
   document.body.classList.add('home-glow');
+
+  const trailLayer = document.createElement('div');
+  trailLayer.className = 'home-glow-trail';
+  trailLayer.setAttribute('aria-hidden', 'true');
+  document.body.insertBefore(trailLayer, document.body.firstChild);
+
   let lastX = 50, lastY = 38, raf = null;
+  let lastDotTime = 0;
+
   function apply(){
     document.body.style.setProperty('--mx', lastX.toFixed(1)+'%');
     document.body.style.setProperty('--my', lastY.toFixed(1)+'%');
+    document.body.style.setProperty('--hue', ((performance.now()/15)%360).toFixed(0));
     raf = null;
   }
+
   document.addEventListener('mousemove', e=>{
     lastX = e.clientX/window.innerWidth*100;
     lastY = e.clientY/window.innerHeight*100;
     if(!raf) raf = requestAnimationFrame(apply);
+
+    const now = performance.now();
+    if(now - lastDotTime > 45){
+      lastDotTime = now;
+      const hue = (now/15)%360;
+      const dot = document.createElement('div');
+      dot.className = 'home-glow-dot';
+      dot.style.left = e.clientX+'px';
+      dot.style.top = e.clientY+'px';
+      dot.style.background = 'hsl('+hue.toFixed(0)+' 80% 65% / 0.55)';
+      dot.addEventListener('animationend', ()=>dot.remove());
+      trailLayer.appendChild(dot);
+    }
   });
 })();
 
