@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hex guesser — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=10">
+<link rel="stylesheet" href="shared.css?v=11">
 </head>
 <body>
 <div class="wrap">
@@ -124,7 +124,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=10"></script>
+<script src="shared.js?v=11"></script>
 <script>
 const gameCanvas = document.getElementById('gameWheelCanvas');
 const gameCtx = gameCanvas.getContext('2d');
@@ -170,7 +170,6 @@ const ACHIEVEMENTS = [
   { id:'hard-mode', icon:'\u{1F480}', name:'Hard mode', desc:'Score 90+ on Hard difficulty.', check: s=>s.hadHardWin },
 ];
 
-const GAME_STORAGE_KEY_BASE = 'colouristic.gameStats.v1';
 function saveGameState(lastScore){
   try{
     localStorage.setItem(namespacedKey(GAME_STORAGE_KEY_BASE), JSON.stringify({

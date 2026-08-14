@@ -519,11 +519,36 @@ function renderAccountBar(){
   const label = document.createElement('span');
   label.className = 'account-label';
   label.textContent = 'Signed in as '+account.username;
+
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'iconbtn'; exportBtn.type = 'button';
+  exportBtn.textContent = 'Export data';
+  exportBtn.title = 'Download a backup of your libraries, recent colours, and game stats';
+  exportBtn.addEventListener('click', exportAccountData);
+
+  const importLabel = document.createElement('label');
+  importLabel.className = 'iconbtn';
+  importLabel.textContent = 'Import data';
+  importLabel.title = 'Restore a Colouristic backup file as a new profile on this device';
+  const importInput = document.createElement('input');
+  importInput.type = 'file'; importInput.accept = 'application/json,.json'; importInput.hidden = true;
+  importInput.addEventListener('change', ()=>{
+    const file = importInput.files[0];
+    importInput.value = '';
+    if(!file) return;
+    importAccountData(file).then(acc=>{
+      alert('Imported "'+acc.username+'" and switched to it.');
+      location.reload();
+    }).catch(err=>{ alert(err.message); });
+  });
+  importLabel.appendChild(importInput);
+
   const outBtn = document.createElement('button');
   outBtn.className = 'iconbtn'; outBtn.type = 'button';
   outBtn.textContent = 'Log out';
   outBtn.addEventListener('click', ()=>{ logOut(); location.href = 'home.html'; });
-  bar.appendChild(label); bar.appendChild(outBtn);
+
+  bar.appendChild(label); bar.appendChild(exportBtn); bar.appendChild(importLabel); bar.appendChild(outBtn);
 }
 function initAccountControl(){
   renderAccountBar();
@@ -684,6 +709,89 @@ function initRecentColorsTray(){
   document.body.appendChild(recentColorsTrayEl);
 
   renderRecentColorsTray();
+}
+
+/* ---- Account data export / import ----
+   Everything lives in localStorage, on this device only -- clear the site
+   data or switch browsers and it's gone. This lets someone download their
+   active account (libraries, recent colours, game stats) as a JSON file,
+   and load that file back in later -- either on this device after a clear,
+   or on a different one. Importing always adds a NEW account rather than
+   overwriting an existing one, de-duplicating the username if it collides,
+   so a bad import can't silently clobber data already on this device. */
+const GAME_STORAGE_KEY_BASE = 'colouristic.gameStats.v1';
+const EXPORT_FORMAT_VERSION = 1;
+
+function safeParseLS(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function exportAccountData(){
+  const account = getActiveAccount();
+  if(!account) return;
+  const payload = {
+    app: 'colouristic',
+    exportVersion: EXPORT_FORMAT_VERSION,
+    exportedAt: new Date().toISOString(),
+    account: { username: account.username, passwordHash: account.passwordHash, createdAt: account.createdAt },
+    data: {
+      libraries: safeParseLS(namespacedKey(LIBRARY_STORAGE_KEY_BASE)),
+      recentColors: safeParseLS(namespacedKey(RECENT_COLORS_KEY_BASE)),
+      gameStats: safeParseLS(namespacedKey(GAME_STORAGE_KEY_BASE)),
+    }
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const safeName = account.username.replace(/[^a-z0-9_-]/gi,'_');
+  triggerDownload(blob, 'colouristic-backup-'+safeName+'-'+new Date().toISOString().slice(0,10)+'.json');
+}
+
+function importAccountData(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = ()=>reject(new Error('Could not read that file.'));
+    reader.onload = ()=>{
+      let payload;
+      try{ payload = JSON.parse(reader.result); }
+      catch(e){ reject(new Error('That file is not valid JSON.')); return; }
+      if(!payload || payload.app!=='colouristic' || !payload.account || !payload.account.username){
+        reject(new Error("That doesn't look like a Colouristic backup file."));
+        return;
+      }
+      try{
+        const data = loadAccountsData();
+        let username = payload.account.username;
+        const taken = new Set(data.accounts.map(a=>a.username.toLowerCase()));
+        if(taken.has(username.toLowerCase())){
+          let n = 2;
+          while(taken.has((username+' ('+n+')').toLowerCase())) n++;
+          username = username+' ('+n+')';
+        }
+        const newAccount = {
+          id: genId('acct'),
+          username,
+          passwordHash: payload.account.passwordHash || '',
+          createdAt: payload.account.createdAt || Date.now(),
+        };
+        data.accounts.push(newAccount);
+        data.activeAccountId = newAccount.id;
+        saveAccountsData(data);
+
+        const d = payload.data || {};
+        if(d.libraries) localStorage.setItem(namespacedKey(LIBRARY_STORAGE_KEY_BASE), JSON.stringify(d.libraries));
+        if(d.recentColors) localStorage.setItem(namespacedKey(RECENT_COLORS_KEY_BASE), JSON.stringify(d.recentColors));
+        if(d.gameStats) localStorage.setItem(namespacedKey(GAME_STORAGE_KEY_BASE), JSON.stringify(d.gameStats));
+
+        notifyAccountChanged();
+        resolve(newAccount);
+      }catch(e){
+        reject(new Error('Something went wrong importing that file.'));
+      }
+    };
+    reader.readAsText(file);
+  });
 }
 
 /* ---- Eyedropper ----
