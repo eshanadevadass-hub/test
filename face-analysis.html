@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Face analysis — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=5">
+<link rel="stylesheet" href="shared.css?v=6">
 </head>
 <body>
 <div class="wrap">
@@ -230,7 +230,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=5"></script>
+<script src="shared.js?v=6"></script>
 <script>
 const fileUpload = document.getElementById('fileUpload');
 const fileCapture = document.getElementById('fileCapture');
@@ -422,6 +422,7 @@ function buildSeasonPalette(gridEl, season){
     colorDiv.style.background=hex;
     colorDiv.title = 'Click to explore this colour on the colour wheel';
     colorDiv.addEventListener('click', ()=>{
+      addRecentColor(hex);
       const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
       location.href = 'index.html#'+params.toString();
     });
@@ -513,6 +514,7 @@ function buildFacePalette(gridEl, hues, undertone, depth, cautious, opts={}){
     colorDiv.style.background=hex;
     colorDiv.title = 'Click to explore this colour on the colour wheel';
     colorDiv.addEventListener('click', ()=>{
+      addRecentColor(hex);
       const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
       location.href = 'index.html#'+params.toString();
     });
@@ -608,6 +610,7 @@ function buildShadeGrid(gridEl, shades){
     colorDiv.style.background=hex;
     colorDiv.title = 'Click to explore this colour on the colour wheel';
     colorDiv.addEventListener('click', ()=>{
+      addRecentColor(hex);
       const params = new URLSearchParams({h:sh.h.toFixed(1), s:sh.s.toFixed(1), l:sh.l.toFixed(1)});
       location.href = 'index.html#'+params.toString();
     });

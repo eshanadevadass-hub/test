@@ -410,6 +410,7 @@ function makeSwatchCard(hex, roleText){
   colorDiv.title = 'Click to copy '+hex;
   colorDiv.addEventListener('click', ()=>{
     navigator.clipboard.writeText(hex.toUpperCase());
+    addRecentColor(hex);
     const label = card.querySelector('.swatch-hex');
     const original = hex.toUpperCase();
     label.textContent = 'Copied';
@@ -600,6 +601,86 @@ function deletePaletteFromLibrary(libraryId, paletteId){
   return data;
 }
 
+/* ---- Recently used colours tray ----
+   A small floating strip, injected on every tool page (not home.html), that
+   remembers the last few colours picked or copied anywhere in the app so
+   they're one click away in whichever tool you're in next. */
+const RECENT_COLORS_KEY_BASE = 'colouristic.recentColors.v1';
+const MAX_RECENT_COLORS = 10;
+
+function getRecentColors(){
+  try{
+    const raw = localStorage.getItem(namespacedKey(RECENT_COLORS_KEY_BASE));
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return [];
+}
+function saveRecentColors(list){
+  try{ localStorage.setItem(namespacedKey(RECENT_COLORS_KEY_BASE), JSON.stringify(list)); }catch(e){}
+}
+function addRecentColor(hex){
+  if(!hex) return;
+  hex = (/^#[0-9a-fA-F]{3}$/.test(hex) ? expandHex3(hex) : hex).toUpperCase();
+  if(!/^#[0-9A-F]{6}$/.test(hex)) return;
+  const list = getRecentColors().filter(h=>h!==hex);
+  list.unshift(hex);
+  saveRecentColors(list.slice(0, MAX_RECENT_COLORS));
+  renderRecentColorsTray();
+}
+
+let recentColorsTrayEl = null;
+function renderRecentColorsTray(){
+  if(!recentColorsTrayEl) return;
+  const list = getRecentColors();
+  recentColorsTrayEl.classList.toggle('visible', list.length>0);
+  const chipsWrap = recentColorsTrayEl.querySelector('.recent-colors-chips');
+  chipsWrap.innerHTML = '';
+  list.forEach(hex=>{
+    const chip = document.createElement('div');
+    chip.className = 'recent-color-chip';
+    chip.style.background = hex;
+    chip.title = hex+' — click to copy';
+    chip.addEventListener('click', ()=>{
+      navigator.clipboard.writeText(hex);
+      chip.classList.add('copied-pulse');
+      setTimeout(()=>chip.classList.remove('copied-pulse'), 500);
+    });
+    chipsWrap.appendChild(chip);
+  });
+}
+
+function initRecentColorsTray(){
+  if(currentPageFile()==='home.html') return;
+  if(recentColorsTrayEl) return;
+
+  recentColorsTrayEl = document.createElement('div');
+  recentColorsTrayEl.className = 'recent-colors-tray';
+
+  const label = document.createElement('span');
+  label.className = 'recent-colors-label';
+  label.textContent = 'Recent';
+
+  const chipsWrap = document.createElement('div');
+  chipsWrap.className = 'recent-colors-chips';
+
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'recent-colors-clear';
+  clearBtn.textContent = '×';
+  clearBtn.title = 'Clear recent colours';
+  clearBtn.addEventListener('click', ()=>{
+    saveRecentColors([]);
+    renderRecentColorsTray();
+  });
+
+  recentColorsTrayEl.appendChild(label);
+  recentColorsTrayEl.appendChild(chipsWrap);
+  recentColorsTrayEl.appendChild(clearBtn);
+  document.body.appendChild(recentColorsTrayEl);
+
+  renderRecentColorsTray();
+}
+
 function attachExportButtons(containerId, gridId, filenameBase, pdfTitle, defaultPaletteName){
   const container = document.getElementById(containerId);
   if(!container) return;
@@ -694,3 +775,4 @@ initGrayscaleControl();
 initLightingControl();
 initTextureControl();
 initAccountControl();
+initRecentColorsTray();

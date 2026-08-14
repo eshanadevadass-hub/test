@@ -18,7 +18,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour wheel &amp; palette generator</title>
-<link rel="stylesheet" href="shared.css?v=5">
+<link rel="stylesheet" href="shared.css?v=6">
 </head>
 <body>
 <div class="wrap">
@@ -173,7 +173,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=5"></script>
+<script src="shared.js?v=6"></script>
 <script>
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
@@ -328,6 +328,7 @@ function applyHexInput(){
   base = {h:hsl.h, s:hsl.s, l:hsl.l};
   lightSlider.value = Math.round(hsl.l);
   onBaseChanged();
+  addRecentColor(normalized);
 }
 
 let currentMedium = 'paint';
@@ -389,7 +390,7 @@ function makeBarDraggable(trackId, onChange){
   }
   track.addEventListener('pointerdown', e=>{ dragging=true; track.setPointerCapture(e.pointerId); handle(e); });
   track.addEventListener('pointermove', e=>{ if(dragging) handle(e); });
-  track.addEventListener('pointerup', ()=>{ dragging=false; });
+  track.addEventListener('pointerup', ()=>{ dragging=false; addRecentColor(hslToHex(base.h, base.s, base.l)); });
 }
 
 makeBarDraggable('trackR', pct=>{
@@ -480,7 +481,7 @@ function pickFromEvent(clientX, clientY){
 let dragging=false;
 canvas.addEventListener('pointerdown', e=>{dragging=true; pickFromEvent(e.clientX,e.clientY); canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointermove', e=>{ if(dragging) pickFromEvent(e.clientX,e.clientY); });
-canvas.addEventListener('pointerup', ()=>{dragging=false;});
+canvas.addEventListener('pointerup', ()=>{dragging=false; addRecentColor(hslToHex(base.h, base.s, base.l));});
 
 canvas.addEventListener('keydown', e=>{
   const step = e.shiftKey ? 10 : 2;
@@ -507,6 +508,7 @@ document.getElementById('shuffleBtn').addEventListener('click', ()=>{
   base.l = 40+Math.random()*30;
   lightSlider.value = Math.round(base.l);
   onBaseChanged();
+  addRecentColor(hslToHex(base.h, base.s, base.l));
 });
 
 document.getElementById('copyLinkBtn').addEventListener('click', ()=>{

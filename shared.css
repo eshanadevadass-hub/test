@@ -636,6 +636,56 @@ label.iconbtn{display:inline-flex;}
 .account-bar:empty{display:none;}
 .account-label{color:var(--text-dim);}
 
+/* ---- recently used colours tray (injected by shared.js on every tool page) ---- */
+.recent-colors-tray{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:40;
+  display:none;
+  align-items:center;
+  gap:10px;
+  background:var(--surface);
+  border:0.5px solid var(--line-strong);
+  border-radius:999px;
+  padding:8px 10px 8px 16px;
+  box-shadow:0 8px 24px -6px rgba(0,0,0,0.45);
+}
+.recent-colors-tray.visible{display:flex;}
+.recent-colors-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--text-faint);
+  white-space:nowrap;
+}
+.recent-colors-chips{display:flex;gap:6px;align-items:center;}
+.recent-color-chip{
+  width:22px;
+  height:22px;
+  border-radius:6px;
+  border:1px solid var(--line-strong);
+  cursor:pointer;
+  flex:none;
+  transition:transform .15s ease;
+}
+.recent-color-chip:hover{transform:scale(1.18);}
+.recent-color-chip.copied-pulse{animation:recent-chip-pulse .5s ease;}
+@keyframes recent-chip-pulse{
+  0%{box-shadow:0 0 0 0 rgba(255,255,255,0.5);}
+  100%{box-shadow:0 0 0 8px rgba(255,255,255,0);}
+}
+.recent-colors-clear{
+  background:none;
+  border:none;
+  color:var(--text-faint);
+  cursor:pointer;
+  font-size:15px;
+  line-height:1;
+  padding:2px 4px;
+}
+.recent-colors-clear:hover{color:var(--text);}
+
 /* ---- home.html: gate + landing page ---- */
 .home-particles{
   position:fixed;
