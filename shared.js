@@ -179,6 +179,30 @@ const STARTER_PACKS = [
     {h:30,s:5,l:10,label:'Near-black'}, {h:30,s:5,l:28,label:'Charcoal'}, {h:30,s:5,l:48,label:'Mid grey'},
     {h:30,s:5,l:72,label:'Light grey'}, {h:30,s:8,l:94,label:'Off-white'}
   ]},
+  { id:'tropical', name:'Tropical', desc:'Saturated, sun-drenched brights.', colors:[
+    {h:330,s:85,l:60,label:'Hot pink'}, {h:90,s:75,l:50,label:'Lime'}, {h:175,s:70,l:50,label:'Turquoise'},
+    {h:30,s:90,l:55,label:'Mango'}, {h:50,s:90,l:60,label:'Sunny yellow'}
+  ]},
+  { id:'winter', name:'Winter', desc:'Icy blues and frosted neutrals.', colors:[
+    {h:200,s:25,l:92,label:'Frost'}, {h:200,s:55,l:75,label:'Ice blue'}, {h:220,s:50,l:22,label:'Deep navy'},
+    {h:210,s:10,l:60,label:'Silver'}, {h:185,s:35,l:70,label:'Pale teal'}
+  ]},
+  { id:'vintage', name:'Vintage', desc:'Muted, sun-faded 70s tones.', colors:[
+    {h:45,s:55,l:48,label:'Mustard'}, {h:15,s:50,l:42,label:'Burnt sienna'}, {h:75,s:35,l:35,label:'Avocado'},
+    {h:185,s:30,l:40,label:'Dusty teal'}, {h:40,s:40,l:85,label:'Cream'}
+  ]},
+  { id:'jewel', name:'Jewel Tones', desc:'Rich, saturated gemstone colours.', colors:[
+    {h:150,s:65,l:32,label:'Emerald'}, {h:215,s:70,l:35,label:'Sapphire'}, {h:350,s:70,l:38,label:'Ruby'},
+    {h:275,s:50,l:42,label:'Amethyst'}, {h:35,s:75,l:48,label:'Topaz'}
+  ]},
+  { id:'candy', name:'Candy', desc:'Playful, sugar-sweet brights.', colors:[
+    {h:325,s:80,l:70,label:'Bubblegum'}, {h:195,s:75,l:75,label:'Cotton candy'}, {h:55,s:85,l:70,label:'Lemon'},
+    {h:280,s:60,l:55,label:'Grape'}, {h:155,s:60,l:70,label:'Mint'}
+  ]},
+  { id:'galaxy', name:'Galaxy', desc:'Deep cosmic indigo and violet, starlit.', colors:[
+    {h:250,s:55,l:18,label:'Deep indigo'}, {h:270,s:55,l:40,label:'Violet'}, {h:240,s:20,l:92,label:'Starlight'},
+    {h:320,s:55,l:55,label:'Nebula pink'}, {h:225,s:60,l:35,label:'Cosmic blue'}
+  ]},
 ];
 
 let _colorNamesLab = null;
