@@ -109,10 +109,15 @@ header p{
 .tool-dots{display:flex;gap:9px;margin-top:20px;}
 .tool-dots .dot{width:7px;height:7px;border-radius:50%;}
 
+.top-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:36px;
+}
 .tool-nav{
-  position:sticky;
-  top:16px;
-  z-index:50;
   display:flex;
   gap:4px;
   flex-wrap:wrap;
@@ -122,7 +127,6 @@ header p{
   border:0.5px solid var(--line);
   border-radius:13px;
   padding:6px;
-  margin-bottom:36px;
 }
 .tool-nav-link{
   display:inline-flex;align-items:center;gap:8px;
@@ -663,7 +667,6 @@ label.iconbtn{display:inline-flex;}
 .game-score-note{font-size:13px;color:var(--text-dim);margin:6px 0 0;line-height:1.5;}
 
 .account-bar{
-  margin:0 0 20px auto;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   max-width:min(280px, calc(100vw - 40px));
   background:rgba(21,20,27,0.88);
