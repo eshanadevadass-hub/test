@@ -947,6 +947,31 @@ function removeAccountAvatar(){
   renderAccountBar();
 }
 
+/* Deterministic username -> colour, so the same username always lands on
+   the same hue (same account, same tab, same login-screen preview -- no
+   randomness, no server round-trip). A simple string hash feeds the hue;
+   saturation/lightness are fixed so every result stays a mid-depth colour
+   that a light initial letter reads clearly against. */
+function usernameToHue(username){
+  const str = (username||'').trim().toLowerCase();
+  if(!str) return null;
+  let hash = 0;
+  for(let i=0;i<str.length;i++){
+    hash = (hash*31 + str.charCodeAt(i)) >>> 0;
+  }
+  return hash % 360;
+}
+function applyAvatarColor(el, username){
+  const hue = usernameToHue(username);
+  if(hue===null){
+    el.style.background = '';
+    el.style.color = '';
+    return;
+  }
+  el.style.background = hslToHex(hue, 55, 38);
+  el.style.color = '#f5f2ec';
+}
+
 function renderAccountBar(){
   const bar = document.getElementById('accountBar');
   if(!bar) return;
@@ -965,6 +990,7 @@ function renderAccountBar(){
     avatarBtn.appendChild(img);
   } else {
     avatarBtn.textContent = account.username.charAt(0).toUpperCase();
+    applyAvatarColor(avatarBtn, account.username);
   }
   avatarBtn.addEventListener('click', ()=>{ location.href = 'profile.html'; });
 

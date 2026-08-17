@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=39">
+<link rel="stylesheet" href="shared.css?v=40">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -25,7 +25,7 @@
 
 </div>
 
-<script src="shared.js?v=39"></script>
+<script src="shared.js?v=40"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55, 0);
 
@@ -148,6 +148,28 @@ function renderAuthForm(mode){
   userInput.type = 'text'; userInput.className = 'hex-guess-input';
   userInput.placeholder = 'Username'; userInput.autocomplete = 'username';
 
+  const usernamePreview = document.createElement('div');
+  usernamePreview.className = 'username-avatar-preview';
+  usernamePreview.textContent = '?';
+  usernamePreview.setAttribute('aria-hidden', 'true');
+
+  const usernameRow = document.createElement('div');
+  usernameRow.className = 'username-field-row';
+  usernameRow.appendChild(usernamePreview);
+  usernameRow.appendChild(userInput);
+
+  function updateUsernamePreview(){
+    const val = userInput.value.trim();
+    if(val){
+      usernamePreview.textContent = val.charAt(0).toUpperCase();
+      applyAvatarColor(usernamePreview, val);
+    } else {
+      usernamePreview.textContent = '?';
+      applyAvatarColor(usernamePreview, '');
+    }
+  }
+  userInput.addEventListener('input', updateUsernamePreview);
+
   const passInput = document.createElement('input');
   passInput.type = 'password'; passInput.className = 'hex-guess-input';
   passInput.placeholder = 'Password'; passInput.autocomplete = 'current-password';
@@ -161,7 +183,7 @@ function renderAuthForm(mode){
   const strengthMeter = attachPasswordStrengthMeter(passInput);
   strengthMeter.style.display = 'none';
 
-  fieldsWrap.appendChild(userInput);
+  fieldsWrap.appendChild(usernameRow);
   fieldsWrap.appendChild(passField);
   fieldsWrap.appendChild(strengthMeter);
   fieldsWrap.appendChild(confirmField);
