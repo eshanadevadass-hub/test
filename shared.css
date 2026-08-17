@@ -899,6 +899,6 @@ label.iconbtn{display:inline-flex;}
   border-radius:14px;
   padding:16px;
   box-shadow:0 12px 32px -8px rgba(0,0,0,0.5);
-  width:140px;
+  width:fit-content;
 }
 .colour-popup.visible{display:block;}
