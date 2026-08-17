@@ -529,12 +529,96 @@ function notifyAccountChanged(){
   window.dispatchEvent(new CustomEvent('colouristic:accountchanged'));
 }
 
+/* Profile photos: stored as a small square JPEG data URL directly on the
+   account object (localStorage only, like everything else here). Center-
+   cropped and downscaled to keep each one a few KB rather than dumping a
+   multi-megabyte phone photo straight into localStorage. */
+function resizeImageToDataUrl(file, size, quality){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const srcSize = Math.min(img.width, img.height);
+      const sx = (img.width-srcSize)/2, sy = (img.height-srcSize)/2;
+      ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(img.src); reject(new Error('Could not read that image.')); };
+    img.src = URL.createObjectURL(file);
+  });
+}
+function setAccountAvatar(dataUrl){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return;
+  account.avatarDataUrl = dataUrl;
+  saveAccountsData(data);
+  renderAccountBar();
+}
+function removeAccountAvatar(){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return;
+  delete account.avatarDataUrl;
+  saveAccountsData(data);
+  renderAccountBar();
+}
+
 function renderAccountBar(){
   const bar = document.getElementById('accountBar');
   if(!bar) return;
   bar.innerHTML = '';
   const account = getActiveAccount();
   if(!account) return;
+
+  const avatarWrap = document.createElement('div');
+  avatarWrap.className = 'account-avatar-wrap';
+
+  const avatarBtn = document.createElement('button');
+  avatarBtn.type = 'button';
+  avatarBtn.className = 'account-avatar-btn';
+  avatarBtn.title = account.avatarDataUrl ? 'Change profile photo' : 'Add a profile photo';
+  if(account.avatarDataUrl){
+    const img = document.createElement('img');
+    img.src = account.avatarDataUrl;
+    img.alt = '';
+    avatarBtn.appendChild(img);
+  } else {
+    avatarBtn.textContent = account.username.charAt(0).toUpperCase();
+  }
+
+  const avatarInput = document.createElement('input');
+  avatarInput.type = 'file';
+  avatarInput.accept = 'image/*';
+  avatarInput.hidden = true;
+  avatarInput.addEventListener('change', async ()=>{
+    const file = avatarInput.files[0];
+    avatarInput.value = '';
+    if(!file) return;
+    try{
+      const dataUrl = await resizeImageToDataUrl(file, 96, 0.85);
+      setAccountAvatar(dataUrl);
+    }catch(e){
+      alert(e.message);
+    }
+  });
+  avatarBtn.addEventListener('click', ()=>avatarInput.click());
+  avatarWrap.appendChild(avatarBtn);
+  avatarWrap.appendChild(avatarInput);
+
+  if(account.avatarDataUrl){
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'account-avatar-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove profile photo';
+    removeBtn.addEventListener('click', e=>{ e.stopPropagation(); removeAccountAvatar(); });
+    avatarWrap.appendChild(removeBtn);
+  }
+
   const label = document.createElement('span');
   label.className = 'account-label';
   label.textContent = 'Signed in as '+account.username;
@@ -544,7 +628,7 @@ function renderAccountBar(){
   outBtn.textContent = 'Log out';
   outBtn.addEventListener('click', ()=>{ logOut(); location.href = 'home.html'; });
 
-  bar.appendChild(label); bar.appendChild(outBtn);
+  bar.appendChild(avatarWrap); bar.appendChild(label); bar.appendChild(outBtn);
 }
 function initAccountControl(){
   renderAccountBar();

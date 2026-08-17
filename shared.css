@@ -669,7 +669,7 @@ label.iconbtn{display:inline-flex;}
 
 .account-bar{
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  max-width:min(280px, calc(100vw - 40px));
+  max-width:min(320px, calc(100vw - 40px));
   background:rgba(21,20,27,0.88);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -680,6 +680,40 @@ label.iconbtn{display:inline-flex;}
 }
 .account-bar:empty{display:none;}
 .account-label{color:var(--text-dim);}
+
+.account-avatar-wrap{position:relative;flex-shrink:0;}
+.account-avatar-btn{
+  width:32px;height:32px;
+  border-radius:50%;
+  border:0.5px solid var(--line-strong);
+  background:var(--surface-2);
+  color:var(--text-dim);
+  font-family:'Inter',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  cursor:pointer;
+  padding:0;
+  flex-shrink:0;
+}
+.account-avatar-btn img{width:100%;height:100%;object-fit:cover;display:block;}
+.account-avatar-btn:hover{border-color:var(--live-color);}
+.account-avatar-remove{
+  position:absolute;
+  top:-4px;right:-4px;
+  width:16px;height:16px;
+  border-radius:50%;
+  background:var(--surface);
+  border:0.5px solid var(--line-strong);
+  color:var(--text-faint);
+  font-size:11px;
+  line-height:1;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  padding:0;
+}
+.account-avatar-remove:hover{color:var(--coral);border-color:var(--coral);}
 
 /* ---- recently used colours tray (injected by shared.js on every tool page) ---- */
 .recent-colors-tray{
