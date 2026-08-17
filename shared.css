@@ -890,3 +890,15 @@ label.iconbtn{display:inline-flex;}
   word-break:break-all;
   white-space:pre-wrap;
 }
+.colour-popup{
+  position:fixed;
+  z-index:60;
+  display:none;
+  background:var(--surface);
+  border:0.5px solid var(--line-strong);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 12px 32px -8px rgba(0,0,0,0.5);
+  width:140px;
+}
+.colour-popup.visible{display:block;}
