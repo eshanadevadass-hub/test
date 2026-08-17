@@ -658,6 +658,38 @@ function genId(prefix){
   return prefix+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 }
 
+/* Celebratory chip burst: same "grab a random named colour, make a small
+   rounded chip out of it" technique as home.html's drifting background
+   particles, just fired once from a point and flown outward instead of
+   spawned randomly and drifted slowly. Used for a one-off flourish (login,
+   signup, guest entry) rather than an ambient background effect. */
+function burstColorChips(originX, originY, count){
+  count = count || 18;
+  const layer = document.createElement('div');
+  layer.className = 'chip-burst-layer';
+  layer.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(layer);
+  for(let i=0;i<count;i++){
+    const c = COLOR_NAMES[Math.floor(Math.random()*COLOR_NAMES.length)];
+    const size = 8 + Math.random()*14;
+    const angle = Math.random()*Math.PI*2;
+    const dist = 70 + Math.random()*150;
+    const chip = document.createElement('div');
+    chip.className = 'chip-burst-item';
+    chip.style.left = originX+'px';
+    chip.style.top = originY+'px';
+    chip.style.width = size+'px';
+    chip.style.height = size+'px';
+    chip.style.background = hslToHex(c.h, c.s, c.l);
+    chip.style.setProperty('--dx', (Math.cos(angle)*dist)+'px');
+    chip.style.setProperty('--dy', (Math.sin(angle)*dist)+'px');
+    chip.style.animationDuration = (0.6 + Math.random()*0.5)+'s';
+    chip.style.animationDelay = (Math.random()*0.08)+'s';
+    layer.appendChild(chip);
+  }
+  setTimeout(()=>layer.remove(), 1300);
+}
+
 /* ---- Local accounts ----
    Everything about an account -- password, libraries, game stats -- lives
    only in this browser's localStorage; there's no account server, so none

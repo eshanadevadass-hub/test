@@ -761,6 +761,19 @@ label.iconbtn{display:inline-flex;}
 .password-strength-label{display:block;font-size:11px;color:var(--text-faint);margin-top:5px;min-height:14px;}
 .username-field-row{display:flex;align-items:center;gap:10px;}
 .username-field-row .hex-guess-input{flex:1;min-width:0;}
+.chip-burst-layer{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;}
+.chip-burst-item{
+  position:absolute;
+  border-radius:6px;
+  transform:translate(-50%,-50%);
+  animation-name:chip-burst-fly;
+  animation-timing-function:cubic-bezier(0.2,0.8,0.3,1);
+  animation-fill-mode:forwards;
+}
+@keyframes chip-burst-fly{
+  0%{transform:translate(-50%,-50%) translate(0,0) scale(0.4) rotate(0deg);opacity:1;}
+  100%{transform:translate(-50%,-50%) translate(var(--dx),var(--dy)) scale(1) rotate(180deg);opacity:0;}
+}
 .username-avatar-preview{
   width:38px;height:38px;
   border-radius:50%;

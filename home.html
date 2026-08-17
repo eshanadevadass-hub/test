@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=41">
+<link rel="stylesheet" href="shared.css?v=42">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -25,7 +25,7 @@
 
 </div>
 
-<script src="shared.js?v=41"></script>
+<script src="shared.js?v=42"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55, 0);
 
@@ -101,6 +101,15 @@ paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 52
 function nextDestination(){
   const params = new URLSearchParams(location.search);
   return params.get('next') || 'index.html';
+}
+
+/* A short celebratory burst before leaving the page -- the navigation is
+   delayed just long enough for it to actually be seen rather than getting
+   cut off by the page unload. */
+function celebrateAndGo(fromEl){
+  const rect = fromEl.getBoundingClientRect();
+  burstColorChips(rect.left+rect.width/2, rect.top+rect.height/2);
+  setTimeout(()=>{ location.href = nextDestination(); }, 450);
 }
 
 const authCard = document.getElementById('authCard');
@@ -197,7 +206,7 @@ function renderAuthForm(mode){
   guestBtn.style.width = '100%'; guestBtn.style.justifyContent = 'center'; guestBtn.style.marginTop = '8px';
   guestBtn.addEventListener('click', ()=>{
     continueAsGuest();
-    location.href = nextDestination();
+    celebrateAndGo(guestBtn);
   });
 
   const note = document.createElement('p');
@@ -230,7 +239,7 @@ function renderAuthForm(mode){
       const res = await logIn(userInput.value, passInput.value);
       if(!res.ok){ errorEl.textContent = res.error; errorEl.style.display='block'; return; }
     }
-    location.href = nextDestination();
+    celebrateAndGo(submitBtn);
   }
   submitBtn.addEventListener('click', submit);
   passInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
