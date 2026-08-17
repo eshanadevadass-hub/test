@@ -12,13 +12,18 @@
     var data = raw ? JSON.parse(raw) : null;
     if(!data || !data.activeAccountId){
       location.replace('home.html?next='+encodeURIComponent(location.pathname.split('/').pop()+location.search+location.hash));
+      return;
+    }
+    var active = data.accounts.find(function(a){ return a.id===data.activeAccountId; });
+    if(active && data.accounts.some(function(a){ return a.id!==active.id && a.username.toLowerCase()===active.username.toLowerCase(); })){
+      location.replace('profile.html?usernameConflict=1');
     }
   }catch(e){}
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour wheel &amp; palette generator</title>
-<link rel="stylesheet" href="shared.css?v=21">
+<link rel="stylesheet" href="shared.css?v=22">
 </head>
 <body>
 <div class="wrap">
@@ -183,7 +188,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=14"></script>
+<script src="shared.js?v=22"></script>
 <script>
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');

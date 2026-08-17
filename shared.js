@@ -12,11 +12,22 @@ function currentPageFile(){
   const last = location.pathname.split('/').pop();
   return last || 'index.html';
 }
+function hasUsernameConflict(account){
+  const data = loadAccountsData();
+  return data.accounts.some(a=>a.id!==account.id && a.username.toLowerCase()===account.username.toLowerCase());
+}
 function enforceAccountGate(){
-  if(currentPageFile()==='home.html') return;
-  if(getActiveAccount()) return;
-  const dest = 'home.html?next='+encodeURIComponent(currentPageFile()+location.search+location.hash);
-  location.replace(dest);
+  const page = currentPageFile();
+  if(page==='home.html') return;
+  const account = getActiveAccount();
+  if(!account){
+    const dest = 'home.html?next='+encodeURIComponent(page+location.search+location.hash);
+    location.replace(dest);
+    return;
+  }
+  if(page!=='profile.html' && hasUsernameConflict(account)){
+    location.replace('profile.html?usernameConflict=1');
+  }
 }
 enforceAccountGate();
 

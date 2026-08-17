@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=21">
+<link rel="stylesheet" href="shared.css?v=22">
 </head>
 <body>
 <div class="wrap">
@@ -43,6 +43,8 @@
 
   <section class="panel panel-profile">
     <p class="section-title">Profile</p>
+
+    <p class="auth-error username-conflict-banner" id="usernameConflictBanner" style="display:none;">Another account on this device already uses this username. Choose a different one below to continue using the app.</p>
 
     <div class="profile-photo-row">
       <div class="account-avatar-wrap">
@@ -76,7 +78,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=21"></script>
+<script src="shared.js?v=22"></script>
 <script>
 const profileAvatarBtn = document.getElementById('profileAvatarBtn');
 const removeAvatarBtn = document.getElementById('removeAvatarBtn');
@@ -124,6 +126,13 @@ removeAvatarBtn.addEventListener('click', ()=>{
   renderProfilePhoto();
 });
 
+const usernameConflictBanner = document.getElementById('usernameConflictBanner');
+function checkUsernameConflict(){
+  const conflicted = hasUsernameConflict(getActiveAccount());
+  usernameConflictBanner.style.display = conflicted ? 'block' : 'none';
+  if(conflicted) usernameInput.focus();
+}
+
 usernameInput.value = getActiveAccount().username;
 saveUsernameBtn.addEventListener('click', ()=>{
   usernameError.style.display = 'none';
@@ -137,8 +146,11 @@ saveUsernameBtn.addEventListener('click', ()=>{
   usernameSuccess.textContent = 'Username updated.';
   usernameSuccess.style.display = 'block';
   renderProfilePhoto();
+  checkUsernameConflict();
 });
 usernameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') saveUsernameBtn.click(); });
+
+checkUsernameConflict();
 
 savePasswordBtn.addEventListener('click', async ()=>{
   passwordError.style.display = 'none';
