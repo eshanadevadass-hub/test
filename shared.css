@@ -486,6 +486,44 @@ html.texture-paint .base-swatch::after{
   background-size: 90px 90px;
   opacity: 0.85;
 }
+html.texture-denim .swatch-color::after,
+html.texture-denim .base-swatch::after{
+  /* Denim: a diagonal twill weave -- warp threads crossing two-over-one under
+     the weft instead of cotton's simple over-under, which reads as a steady
+     diagonal rib rather than a flat grid. One fine repeating diagonal
+     gradient builds the rib itself (light edge, dark edge, a flat gap
+     between), a second, coarser one at the same angle adds the gentle
+     undulation real twill has, and a scatter of light/dark fibre flecks on
+     top is the slubby, heathered look of the coarse cotton yarn it's woven
+     from -- since it's the fleck and the rib together that read as denim
+     rather than just any diagonal stripe. */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='26'%3E%3Ccircle cx='4' cy='6' r='0.7' fill='rgb(235,235,235)'/%3E%3Ccircle cx='17' cy='3' r='0.5' fill='rgb(30,30,30)'/%3E%3Ccircle cx='21' cy='14' r='0.8' fill='rgb(235,235,235)'/%3E%3Ccircle cx='9' cy='19' r='0.5' fill='rgb(30,30,30)'/%3E%3Ccircle cx='24' cy='23' r='0.6' fill='rgb(235,235,235)'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(65deg, rgba(255,255,255,0.18) 0px 1.5px, rgba(0,0,0,0.24) 1.5px 3px, transparent 3px 4.5px),
+    repeating-linear-gradient(65deg, rgba(0,0,0,0.16) 0px 6px, transparent 6px 12px);
+  background-size: 26px 26px, 4.5px 4.5px, 24px 24px;
+  background-blend-mode: overlay, soft-light, multiply;
+  opacity: 0.9;
+}
+html.texture-corduroy .swatch-color::after,
+html.texture-corduroy .base-swatch::after{
+  /* Corduroy: parallel raised pile cords (wales) running vertically, each one
+     a rounded ridge that catches the light along its crown and falls into
+     shadow on both sides before the next groove -- built as one repeating
+     gradient cycle per cord (shadow -> highlight -> shadow -> deep groove)
+     rather than flat stripes, so each wale reads as a rounded 3D cord instead
+     of a printed line. A faint horizontal grain on top is the soft fuzz of
+     the pile itself. */
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.12) 10%,
+      rgba(255,255,255,0.5) 28%, rgba(255,255,255,0.08) 46%,
+      rgba(0,0,0,0.28) 66%, rgba(0,0,0,0.4) 85%, rgba(0,0,0,0.4) 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px 1px, rgba(0,0,0,0.05) 1px 2px);
+  background-size: 11px 100%, 100% 2px;
+  background-blend-mode: multiply, soft-light;
+  opacity: 0.92;
+}
 
 .lock-toggle{
   position:absolute;top:8px;right:8px;
