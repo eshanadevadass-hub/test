@@ -152,7 +152,6 @@ function backgroundPreviewSwatches(h, s, l){
   return [
     {label:'White', hex:'#FFFFFF'},
     {label:'Black', hex:'#000000'},
-    {label:'Light grey', hex:'#E8E8E8'},
     {label:'Dark grey', hex:'#2A2A2A'},
     {label:'Cream', hex:'#F5F0E6'},
     {label:'Dark navy', hex:'#1A1F2E'},
