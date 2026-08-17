@@ -800,6 +800,36 @@ function logOut(){
   saveAccountsData(data);
   notifyAccountChanged();
 }
+/* Guest mode: a lightweight account with no password, so someone can try the
+   tools immediately from the login screen without signing up. It's a real
+   entry in the accounts list -- not a special code path -- so everything
+   that already keys off account.id (namespacedKey, saved libraries, game
+   stats) works for a guest exactly as it does for a signed-up account, and
+   their work survives closing the tab. Re-clicking "Continue as guest"
+   resumes the same guest slot rather than creating a new one each time. */
+function continueAsGuest(){
+  const data = loadAccountsData();
+  let account = data.accounts.find(a=>a.isGuest);
+  if(!account){
+    account = {id:genId('acct'), username:'Guest', isGuest:true, createdAt:Date.now()};
+    data.accounts.push(account);
+  }
+  data.activeAccountId = account.id;
+  saveAccountsData(data);
+  notifyAccountChanged();
+  return account;
+}
+async function setGuestPassword(newPassword){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return {ok:false, error:'No active account.'};
+  if(!newPassword || newPassword.length<4) return {ok:false, error:'Password must be at least 4 characters.'};
+  account.passwordHash = await hashPassword(newPassword);
+  delete account.isGuest;
+  saveAccountsData(data);
+  notifyAccountChanged();
+  return {ok:true};
+}
 async function updateUsername(newUsername){
   newUsername = (newUsername||'').trim();
   if(!newUsername) return {ok:false, error:'Enter a username.'};
@@ -880,7 +910,7 @@ function renderAccountBar(){
   const avatarBtn = document.createElement('button');
   avatarBtn.type = 'button';
   avatarBtn.className = 'account-avatar-btn';
-  avatarBtn.title = 'Edit profile';
+  avatarBtn.title = account.isGuest ? 'Set up your account' : 'Edit profile';
   if(account.avatarDataUrl){
     const img = document.createElement('img');
     img.src = account.avatarDataUrl;
@@ -892,15 +922,23 @@ function renderAccountBar(){
   avatarBtn.addEventListener('click', ()=>{ location.href = 'profile.html'; });
 
   const label = document.createElement('span');
-  label.className = 'account-label';
-  label.textContent = 'Signed in as '+account.username;
+  label.className = 'account-label'+(account.isGuest ? ' account-label-guest' : '');
+  label.textContent = account.isGuest ? 'Browsing as guest' : 'Signed in as '+account.username;
 
   const outBtn = document.createElement('button');
   outBtn.className = 'iconbtn'; outBtn.type = 'button';
   outBtn.textContent = 'Log out';
   outBtn.addEventListener('click', ()=>{ logOut(); location.href = 'home.html'; });
 
-  bar.appendChild(avatarBtn); bar.appendChild(label); bar.appendChild(outBtn);
+  bar.appendChild(avatarBtn); bar.appendChild(label);
+  if(account.isGuest){
+    const signUpBtn = document.createElement('button');
+    signUpBtn.className = 'iconbtn active'; signUpBtn.type = 'button';
+    signUpBtn.textContent = 'Sign up';
+    signUpBtn.addEventListener('click', ()=>{ location.href = 'profile.html'; });
+    bar.appendChild(signUpBtn);
+  }
+  bar.appendChild(outBtn);
 }
 function initAccountControl(){
   renderAccountBar();

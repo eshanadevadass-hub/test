@@ -771,6 +771,8 @@ label.iconbtn{display:inline-flex;}
 }
 .account-bar:empty{display:none;}
 .account-label{color:var(--text-dim);}
+.account-label-guest{color:var(--gold);}
+.guest-banner{color:var(--gold);}
 
 .account-avatar-wrap{position:relative;flex-shrink:0;}
 .account-avatar-btn{

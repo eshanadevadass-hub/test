@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=37">
+<link rel="stylesheet" href="shared.css?v=38">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -25,7 +25,7 @@
 
 </div>
 
-<script src="shared.js?v=37"></script>
+<script src="shared.js?v=38"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55, 0);
 
@@ -171,6 +171,15 @@ function renderAuthForm(mode){
   submitBtn.type = 'button'; submitBtn.className = 'iconbtn active';
   submitBtn.style.width = '100%'; submitBtn.style.justifyContent = 'center'; submitBtn.style.marginTop = '14px';
 
+  const guestBtn = document.createElement('button');
+  guestBtn.type = 'button'; guestBtn.className = 'iconbtn';
+  guestBtn.textContent = 'Continue as guest';
+  guestBtn.style.width = '100%'; guestBtn.style.justifyContent = 'center'; guestBtn.style.marginTop = '8px';
+  guestBtn.addEventListener('click', ()=>{
+    continueAsGuest();
+    location.href = nextDestination();
+  });
+
   const note = document.createElement('p');
   note.className = 'auth-note';
   note.textContent = "Your password and everything you make stays local to this device — there's no account server. Usernames are checked against a shared registry so nobody else, on any device, can use the same one, but that's all that's shared.";
@@ -210,6 +219,7 @@ function renderAuthForm(mode){
   authCard.appendChild(fieldsWrap);
   authCard.appendChild(errorEl);
   authCard.appendChild(submitBtn);
+  authCard.appendChild(guestBtn);
   authCard.appendChild(note);
 
   setMode(mode);

@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=37">
+<link rel="stylesheet" href="shared.css?v=38">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -48,6 +48,7 @@
     <p class="section-title">Profile</p>
 
     <p class="auth-error username-conflict-banner" id="usernameConflictBanner" style="display:none;">Another account on this device already uses this username. Choose a different one below to continue using the app.</p>
+    <p class="auth-note guest-banner" id="guestBanner" style="display:none;">You're browsing as a guest — your palettes and settings are already saved on this device. Set a password below to turn this into a permanent account.</p>
 
     <div class="profile-photo-row">
       <div class="account-avatar-wrap">
@@ -69,7 +70,7 @@
     <p class="auth-note profile-success" id="usernameSuccess" style="display:none;"></p>
     <button type="button" class="iconbtn" id="saveUsernameBtn" style="margin-top:12px;">Save username</button>
 
-    <p class="section-title" style="margin-top:32px;">Change password</p>
+    <p class="section-title" id="passwordSectionTitle" style="margin-top:32px;">Change password</p>
     <div class="auth-fields" style="max-width:320px;">
       <input type="password" id="currentPasswordInput" class="hex-guess-input" placeholder="Current password" autocomplete="current-password">
       <input type="password" id="newPasswordInput" class="hex-guess-input" placeholder="New password" autocomplete="new-password">
@@ -81,7 +82,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=37"></script>
+<script src="shared.js?v=38"></script>
 <script>
 const profileAvatarBtn = document.getElementById('profileAvatarBtn');
 const removeAvatarBtn = document.getElementById('removeAvatarBtn');
@@ -96,6 +97,8 @@ const confirmPasswordInput = document.getElementById('confirmPasswordInput');
 const passwordError = document.getElementById('passwordError');
 const passwordSuccess = document.getElementById('passwordSuccess');
 const savePasswordBtn = document.getElementById('savePasswordBtn');
+const guestBanner = document.getElementById('guestBanner');
+const passwordSectionTitle = document.getElementById('passwordSectionTitle');
 
 function renderProfilePhoto(){
   const account = getActiveAccount();
@@ -160,6 +163,14 @@ usernameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') saveUsernameB
 
 checkUsernameConflict();
 
+function applyGuestPasswordUI(isGuest){
+  guestBanner.style.display = isGuest ? 'block' : 'none';
+  currentPasswordInput.style.display = isGuest ? 'none' : 'block';
+  passwordSectionTitle.textContent = isGuest ? 'Set a password' : 'Change password';
+  savePasswordBtn.textContent = isGuest ? 'Set password' : 'Change password';
+}
+applyGuestPasswordUI(getActiveAccount().isGuest === true);
+
 savePasswordBtn.addEventListener('click', async ()=>{
   passwordError.style.display = 'none';
   passwordSuccess.style.display = 'none';
@@ -168,17 +179,21 @@ savePasswordBtn.addEventListener('click', async ()=>{
     passwordError.style.display = 'block';
     return;
   }
-  const res = await updatePassword(currentPasswordInput.value, newPasswordInput.value);
+  const wasGuest = getActiveAccount().isGuest === true;
+  const res = wasGuest
+    ? await setGuestPassword(newPasswordInput.value)
+    : await updatePassword(currentPasswordInput.value, newPasswordInput.value);
   if(!res.ok){
     passwordError.textContent = res.error;
     passwordError.style.display = 'block';
     return;
   }
-  passwordSuccess.textContent = 'Password changed.';
+  passwordSuccess.textContent = wasGuest ? 'Password set — this is now a permanent account.' : 'Password changed.';
   passwordSuccess.style.display = 'block';
   currentPasswordInput.value = '';
   newPasswordInput.value = '';
   confirmPasswordInput.value = '';
+  if(wasGuest) applyGuestPasswordUI(false);
 });
 
 renderProfilePhoto();
