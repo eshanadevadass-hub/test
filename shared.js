@@ -524,6 +524,29 @@ function logOut(){
   saveAccountsData(data);
   notifyAccountChanged();
 }
+function updateUsername(newUsername){
+  newUsername = (newUsername||'').trim();
+  if(!newUsername) return {ok:false, error:'Enter a username.'};
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return {ok:false, error:'No active account.'};
+  const taken = data.accounts.some(a=>a.id!==account.id && a.username.toLowerCase()===newUsername.toLowerCase());
+  if(taken) return {ok:false, error:'That username is already taken on this device.'};
+  account.username = newUsername;
+  saveAccountsData(data);
+  notifyAccountChanged();
+  return {ok:true, account};
+}
+async function updatePassword(currentPassword, newPassword){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return {ok:false, error:'No active account.'};
+  if(await hashPassword(currentPassword||'') !== account.passwordHash) return {ok:false, error:'Current password is incorrect.'};
+  if(!newPassword || newPassword.length<4) return {ok:false, error:'New password must be at least 4 characters.'};
+  account.passwordHash = await hashPassword(newPassword);
+  saveAccountsData(data);
+  return {ok:true};
+}
 function notifyAccountChanged(){
   renderAccountBar();
   window.dispatchEvent(new CustomEvent('colouristic:accountchanged'));
@@ -574,13 +597,10 @@ function renderAccountBar(){
   const account = getActiveAccount();
   if(!account) return;
 
-  const avatarWrap = document.createElement('div');
-  avatarWrap.className = 'account-avatar-wrap';
-
   const avatarBtn = document.createElement('button');
   avatarBtn.type = 'button';
   avatarBtn.className = 'account-avatar-btn';
-  avatarBtn.title = account.avatarDataUrl ? 'Change profile photo' : 'Add a profile photo';
+  avatarBtn.title = 'Edit profile';
   if(account.avatarDataUrl){
     const img = document.createElement('img');
     img.src = account.avatarDataUrl;
@@ -589,35 +609,7 @@ function renderAccountBar(){
   } else {
     avatarBtn.textContent = account.username.charAt(0).toUpperCase();
   }
-
-  const avatarInput = document.createElement('input');
-  avatarInput.type = 'file';
-  avatarInput.accept = 'image/*';
-  avatarInput.hidden = true;
-  avatarInput.addEventListener('change', async ()=>{
-    const file = avatarInput.files[0];
-    avatarInput.value = '';
-    if(!file) return;
-    try{
-      const dataUrl = await resizeImageToDataUrl(file, 96, 0.85);
-      setAccountAvatar(dataUrl);
-    }catch(e){
-      alert(e.message);
-    }
-  });
-  avatarBtn.addEventListener('click', ()=>avatarInput.click());
-  avatarWrap.appendChild(avatarBtn);
-  avatarWrap.appendChild(avatarInput);
-
-  if(account.avatarDataUrl){
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'account-avatar-remove';
-    removeBtn.innerHTML = '&times;';
-    removeBtn.title = 'Remove profile photo';
-    removeBtn.addEventListener('click', e=>{ e.stopPropagation(); removeAccountAvatar(); });
-    avatarWrap.appendChild(removeBtn);
-  }
+  avatarBtn.addEventListener('click', ()=>{ location.href = 'profile.html'; });
 
   const label = document.createElement('span');
   label.className = 'account-label';
@@ -628,7 +620,7 @@ function renderAccountBar(){
   outBtn.textContent = 'Log out';
   outBtn.addEventListener('click', ()=>{ logOut(); location.href = 'home.html'; });
 
-  bar.appendChild(avatarWrap); bar.appendChild(label); bar.appendChild(outBtn);
+  bar.appendChild(avatarBtn); bar.appendChild(label); bar.appendChild(outBtn);
 }
 function initAccountControl(){
   renderAccountBar();

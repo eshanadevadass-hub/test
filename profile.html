@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+(function(){
+  try{
+    var raw = localStorage.getItem('colouristic.accounts.v1');
+    var data = raw ? JSON.parse(raw) : null;
+    if(!data || !data.activeAccountId){
+      location.replace('home.html?next='+encodeURIComponent(location.pathname.split('/').pop()+location.search+location.hash));
+    }
+  }catch(e){}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Colouristic</title>
+<link rel="stylesheet" href="shared.css?v=21">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-bar">
+  <nav class="tool-nav">
+    <a class="tool-nav-link" href="index.html"><span class="tool-nav-dot" style="background:var(--violet);"></span>Colour wheel</a>
+    <a class="tool-nav-link" href="palette-generator.html"><span class="tool-nav-dot" style="background:var(--gold);"></span>Palette generator</a>
+    <a class="tool-nav-link" href="photo-palette.html"><span class="tool-nav-dot" style="background:var(--teal);"></span>Photo palette</a>
+    <a class="tool-nav-link" href="gradient-generator.html"><span class="tool-nav-dot" style="background:var(--accent);"></span>Gradients</a>
+    <a class="tool-nav-link" href="mood-finder.html"><span class="tool-nav-dot" style="background:var(--sage);"></span>Mood finder</a>
+    <a class="tool-nav-link" href="face-analysis.html"><span class="tool-nav-dot" style="background:var(--coral);"></span>Face analysis</a>
+    <a class="tool-nav-link" href="colour-game.html"><span class="tool-nav-dot" style="background:var(--pink);"></span>Hex guesser</a>
+    <a class="tool-nav-link" href="library.html"><span class="tool-nav-dot" style="background:var(--sky);"></span>Library</a>
+  </nav>
+
+  <div class="account-bar" id="accountBar"></div>
+  </div>
+
+  <header>
+    <p class="eyebrow">Colour theory, made tactile</p>
+    <h1>Colouristic — <em>light, pigment,</em> and everything between</h1>
+    <p>A colour-theory playground — spin the wheel, mix paint and light, pull palettes from photos, and race the clock guessing hex codes. One eyedropper, one recent-colours tray, every tool in sync.</p>
+  </header>
+
+  <section class="panel panel-profile">
+    <p class="section-title">Profile</p>
+
+    <div class="profile-photo-row">
+      <div class="account-avatar-wrap">
+        <button type="button" class="account-avatar-btn profile-avatar-btn" id="profileAvatarBtn" title="Upload a photo"></button>
+        <button type="button" class="account-avatar-remove" id="removeAvatarBtn" style="display:none;" title="Remove profile photo">&times;</button>
+      </div>
+      <div>
+        <label class="iconbtn" for="avatarUpload">Upload a photo</label>
+        <input type="file" id="avatarUpload" accept="image/*" hidden>
+        <p class="hint" style="margin:8px 0 0;">Square photos work best. Stored only on this device.</p>
+      </div>
+    </div>
+
+    <p class="section-title" style="margin-top:32px;">Username</p>
+    <div class="hex-guess-row" style="max-width:320px;">
+      <input type="text" id="usernameInput" class="hex-guess-input" autocomplete="username">
+    </div>
+    <p class="auth-error" id="usernameError" style="display:none;"></p>
+    <p class="auth-note profile-success" id="usernameSuccess" style="display:none;"></p>
+    <button type="button" class="iconbtn" id="saveUsernameBtn" style="margin-top:12px;">Save username</button>
+
+    <p class="section-title" style="margin-top:32px;">Change password</p>
+    <div class="auth-fields" style="max-width:320px;">
+      <input type="password" id="currentPasswordInput" class="hex-guess-input" placeholder="Current password" autocomplete="current-password">
+      <input type="password" id="newPasswordInput" class="hex-guess-input" placeholder="New password" autocomplete="new-password">
+      <input type="password" id="confirmPasswordInput" class="hex-guess-input" placeholder="Confirm new password" autocomplete="new-password">
+    </div>
+    <p class="auth-error" id="passwordError" style="display:none;"></p>
+    <p class="auth-note profile-success" id="passwordSuccess" style="display:none;"></p>
+    <button type="button" class="iconbtn" id="savePasswordBtn" style="margin-top:12px;">Change password</button>
+  </section>
+</div>
+
+<script src="shared.js?v=21"></script>
+<script>
+const profileAvatarBtn = document.getElementById('profileAvatarBtn');
+const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+const avatarUpload = document.getElementById('avatarUpload');
+const usernameInput = document.getElementById('usernameInput');
+const usernameError = document.getElementById('usernameError');
+const usernameSuccess = document.getElementById('usernameSuccess');
+const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+const currentPasswordInput = document.getElementById('currentPasswordInput');
+const newPasswordInput = document.getElementById('newPasswordInput');
+const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+const passwordError = document.getElementById('passwordError');
+const passwordSuccess = document.getElementById('passwordSuccess');
+const savePasswordBtn = document.getElementById('savePasswordBtn');
+
+function renderProfilePhoto(){
+  const account = getActiveAccount();
+  profileAvatarBtn.innerHTML = '';
+  if(account.avatarDataUrl){
+    const img = document.createElement('img');
+    img.src = account.avatarDataUrl;
+    img.alt = '';
+    profileAvatarBtn.appendChild(img);
+    removeAvatarBtn.style.display = 'flex';
+  } else {
+    profileAvatarBtn.textContent = account.username.charAt(0).toUpperCase();
+    removeAvatarBtn.style.display = 'none';
+  }
+}
+profileAvatarBtn.addEventListener('click', ()=>avatarUpload.click());
+avatarUpload.addEventListener('change', async ()=>{
+  const file = avatarUpload.files[0];
+  avatarUpload.value = '';
+  if(!file) return;
+  try{
+    const dataUrl = await resizeImageToDataUrl(file, 160, 0.85);
+    setAccountAvatar(dataUrl);
+    renderProfilePhoto();
+  }catch(e){
+    alert(e.message);
+  }
+});
+removeAvatarBtn.addEventListener('click', ()=>{
+  removeAccountAvatar();
+  renderProfilePhoto();
+});
+
+usernameInput.value = getActiveAccount().username;
+saveUsernameBtn.addEventListener('click', ()=>{
+  usernameError.style.display = 'none';
+  usernameSuccess.style.display = 'none';
+  const res = updateUsername(usernameInput.value);
+  if(!res.ok){
+    usernameError.textContent = res.error;
+    usernameError.style.display = 'block';
+    return;
+  }
+  usernameSuccess.textContent = 'Username updated.';
+  usernameSuccess.style.display = 'block';
+  renderProfilePhoto();
+});
+usernameInput.addEventListener('keydown', e=>{ if(e.key==='Enter') saveUsernameBtn.click(); });
+
+savePasswordBtn.addEventListener('click', async ()=>{
+  passwordError.style.display = 'none';
+  passwordSuccess.style.display = 'none';
+  if(newPasswordInput.value !== confirmPasswordInput.value){
+    passwordError.textContent = "New passwords don't match.";
+    passwordError.style.display = 'block';
+    return;
+  }
+  const res = await updatePassword(currentPasswordInput.value, newPasswordInput.value);
+  if(!res.ok){
+    passwordError.textContent = res.error;
+    passwordError.style.display = 'block';
+    return;
+  }
+  passwordSuccess.textContent = 'Password changed.';
+  passwordSuccess.style.display = 'block';
+  currentPasswordInput.value = '';
+  newPasswordInput.value = '';
+  confirmPasswordInput.value = '';
+});
+
+renderProfilePhoto();
+</script>
+</body>
+</html>
