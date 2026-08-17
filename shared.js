@@ -721,6 +721,53 @@ function wrapWithPasswordToggle(input){
   wrap.appendChild(btn);
   return wrap;
 }
+
+/* Deliberately simple, explicit tiers (not a points formula) so the jump
+   between "Weak" and "Good" is easy to reason about and to test: length is
+   the dominant factor, character variety only matters once length clears
+   8 or 12. Mirrors signUp()'s own length>=4 floor -- shorter than that is
+   "Too short" here for the same reason signUp() would reject it outright. */
+function passwordStrength(pw){
+  pw = pw || '';
+  if(pw.length===0) return {score:0, label:''};
+  if(pw.length<4) return {score:0, label:'Too short'};
+  let variety = 0;
+  if(/[a-z]/.test(pw)) variety++;
+  if(/[A-Z]/.test(pw)) variety++;
+  if(/[0-9]/.test(pw)) variety++;
+  if(/[^A-Za-z0-9]/.test(pw)) variety++;
+  if(pw.length>=12 && variety>=3) return {score:4, label:'Strong'};
+  if(pw.length>=8 && variety>=2) return {score:3, label:'Good'};
+  if(pw.length>=8 || variety>=2) return {score:2, label:'Fair'};
+  return {score:1, label:'Weak'};
+}
+function attachPasswordStrengthMeter(input){
+  const wrap = document.createElement('div');
+  wrap.className = 'password-strength';
+  const bar = document.createElement('div');
+  bar.className = 'password-strength-bar';
+  const segs = [];
+  for(let i=0;i<4;i++){
+    const seg = document.createElement('span');
+    bar.appendChild(seg);
+    segs.push(seg);
+  }
+  const label = document.createElement('span');
+  label.className = 'password-strength-label';
+  wrap.appendChild(bar);
+  wrap.appendChild(label);
+
+  const COLORS = {0:'var(--coral)', 1:'var(--coral)', 2:'var(--gold)', 3:'var(--sage)', 4:'var(--teal)'};
+  function update(){
+    const {score, label:text} = passwordStrength(input.value);
+    segs.forEach((seg,i)=>{ seg.style.background = i<score ? COLORS[score] : ''; });
+    label.textContent = text;
+    label.style.color = score ? COLORS[score] : '';
+  }
+  input.addEventListener('input', update);
+  update();
+  return wrap;
+}
 /* ---- Global username uniqueness (optional Firebase backend) ----
    Everything else here is local-only by design, but a username only really
    means "yours" if nobody else -- on any device -- can also be using it,
