@@ -340,6 +340,23 @@ function appendColorName(infoEl, hex){
   return nameEl;
 }
 
+/* Suggests a palette name from its own colours ("Violet & Coral") rather
+   than always defaulting to a generic placeholder -- reuses the same
+   nearest-named-colour lookup swatch cards already show underneath each
+   hex. Still just a starting point in an editable field, not the final
+   word: nothing stops someone typing over it. */
+function suggestPaletteName(colors){
+  if(!colors || !colors.length) return null;
+  const names = [];
+  colors.forEach(c=>{
+    const n = nearestColorName(c.hex);
+    if(!names.includes(n)) names.push(n);
+  });
+  if(names.length===1) return names[0]+' tones';
+  const shown = names.slice(0,3);
+  return shown.length<=2 ? shown.join(' & ') : shown.join(', ').replace(/, ([^,]*)$/, ' & $1');
+}
+
 // Wheels next to a lightness control must re-call this with the current lightness on every change, not just on init.
 function paintStaticWheel(targetCtx, targetSize, lightness=55){
   const c = targetSize/2, rad = c-4;
@@ -1112,7 +1129,7 @@ function attachExportButtons(containerId, gridId, filenameBase, pdfTitle, defaul
     nameInput.type = 'text';
     nameInput.className = 'hex-guess-input';
     nameInput.style.cssText = 'width:180px;font-size:13px;padding:8px 12px;';
-    nameInput.value = defaultPaletteName || 'My palette';
+    nameInput.value = suggestPaletteName(scrapeSwatches(gridId)) || defaultPaletteName || 'My palette';
     nameInput.setAttribute('aria-label','Palette name');
 
     const confirmBtn = document.createElement('button');
