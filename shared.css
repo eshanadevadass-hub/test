@@ -894,6 +894,30 @@ label.iconbtn{display:inline-flex;}
 .contrast-badge.pass{background:rgba(79,201,174,0.16);color:var(--teal);}
 .contrast-badge.fail{background:rgba(239,139,107,0.16);color:var(--coral);}
 
+/* ---- tonal remix (shared.js: renderTonalRemix) ---- */
+.tonal-remix-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.tonal-remix-row:last-child{margin-bottom:0;}
+.tonal-remix-label{
+  font-size:11.5px;
+  color:var(--text-dim);
+  width:110px;
+  flex-shrink:0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.tonal-remix-strip{
+  display:flex;
+  flex:1;
+  border-radius:8px;
+  overflow:hidden;
+  height:32px;
+  border:0.5px solid var(--line-strong);
+}
+.tonal-remix-swatch{flex:1;cursor:pointer;transition:transform .1s ease;}
+.tonal-remix-swatch:hover{transform:scaleY(1.15);}
+.tonal-remix-swatch.chip-pulse{animation:recent-chip-pulse .5s ease;}
+
 /* ---- gradient-generator.html ---- */
 .gradient-preview{
   width:100%;

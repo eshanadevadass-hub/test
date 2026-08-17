@@ -20,7 +20,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Palette generator — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=25">
+<link rel="stylesheet" href="shared.css?v=28">
 </head>
 <body>
 <div class="wrap">
@@ -146,10 +146,16 @@
       <p class="section-title" style="margin-bottom:10px;">Contrast between swatches</p>
       <div id="contrastMatrixRows"></div>
     </div>
+
+    <div class="contrast-check" id="paletteTonalRemix">
+      <p class="section-title" style="margin-bottom:10px;">Tonal remix</p>
+      <p class="hint" style="margin-top:0;margin-bottom:14px;">Lighter and darker steps for each swatch — click any step to copy it.</p>
+      <div id="tonalRemixRows"></div>
+    </div>
   </div>
 </div>
 
-<script src="shared.js?v=27"></script>
+<script src="shared.js?v=28"></script>
 <script>
 let base = {h:265, s:55, l:55};
 
@@ -378,6 +384,7 @@ function restoreState(){
 function buildPalette(){
   const colors = computeHarmonyColors();
   const proportions = currentHarmony.proportions;
+  const swatchesForRemix = [];
 
   paletteGrid.innerHTML='';
   paletteGrid.classList.toggle('palette-proportion', !!proportions);
@@ -433,8 +440,11 @@ function buildPalette(){
     card.appendChild(colorDiv);
     card.appendChild(info);
     paletteGrid.appendChild(card);
+
+    swatchesForRemix.push({hex: hex.toUpperCase(), label: roleLabel.textContent});
   });
   renderContrastMatrix(colors);
+  renderTonalRemix(document.getElementById('tonalRemixRows'), swatchesForRemix);
   scheduleStateSync();
 }
 

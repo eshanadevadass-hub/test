@@ -20,7 +20,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Library — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=25">
+<link rel="stylesheet" href="shared.css?v=28">
 </head>
 <body>
 <div class="wrap">
@@ -93,7 +93,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=27"></script>
+<script src="shared.js?v=28"></script>
 <script>
 let currentLibraryId = null;
 
@@ -226,12 +226,36 @@ function renderLibraryContent(){
     pdfBtn.textContent = 'Download PDF';
     pdfBtn.addEventListener('click', ()=>{ exportPaletteAsPDF(pal.colors, 'colouristic-'+slug, pal.name); flash(pdfBtn); });
 
+    const remixSection = document.createElement('div');
+    remixSection.className = 'contrast-check';
+    remixSection.style.display = 'none';
+    const remixRows = document.createElement('div');
+    remixSection.appendChild(remixRows);
+
+    const remixBtn = document.createElement('button');
+    remixBtn.className = 'iconbtn';
+    remixBtn.type = 'button';
+    remixBtn.textContent = 'Show tonal remix';
+    remixBtn.addEventListener('click', ()=>{
+      const showing = remixSection.style.display !== 'none';
+      if(showing){
+        remixSection.style.display = 'none';
+        remixBtn.textContent = 'Show tonal remix';
+      } else {
+        renderTonalRemix(remixRows, pal.colors);
+        remixSection.style.display = 'block';
+        remixBtn.textContent = 'Hide tonal remix';
+      }
+    });
+
     exportRow.appendChild(pngBtn);
     exportRow.appendChild(pdfBtn);
+    exportRow.appendChild(remixBtn);
 
     card.appendChild(head);
     card.appendChild(grid);
     card.appendChild(exportRow);
+    card.appendChild(remixSection);
     contentEl.appendChild(card);
   });
 }

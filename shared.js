@@ -86,6 +86,61 @@ function contrastLevel(ratio){
   return {label:'Fail', pass:false};
 }
 
+/* ---- Tonal remix ----
+   A flat palette of 5-ish colours isn't enough to actually build something
+   with -- you need lighter/darker steps for hover states, borders, disabled
+   text, and so on. This turns any single swatch into a 7-step tint-to-shade
+   ramp, keeping hue fixed and gently pulling saturation down toward the
+   extremes (a very light tint or very dark shade of a highly saturated
+   colour looks more natural a little desaturated than neon). Lightness
+   offsets are relative to the input, not fixed stops, so the ramp always
+   passes through the original colour in the middle. */
+function generateTonalScale(h, s, l){
+  const offsets = [45, 30, 15, 0, -15, -30, -45];
+  return offsets.map(off=>({
+    h,
+    s: Math.max(0, Math.min(100, s - Math.abs(off)*0.15)),
+    l: Math.max(4, Math.min(96, l+off))
+  }));
+}
+function renderTonalRemix(container, colors){
+  container.innerHTML = '';
+  colors.forEach(c=>{
+    const r = parseInt(c.hex.slice(1,3),16), g = parseInt(c.hex.slice(3,5),16), b = parseInt(c.hex.slice(5,7),16);
+    const hsl = rgbToHsl(r,g,b);
+    const scale = generateTonalScale(hsl.h, hsl.s, hsl.l);
+
+    const row = document.createElement('div');
+    row.className = 'tonal-remix-row';
+
+    const label = document.createElement('span');
+    label.className = 'tonal-remix-label';
+    label.textContent = c.label || c.hex;
+    label.title = c.label || c.hex;
+
+    const strip = document.createElement('div');
+    strip.className = 'tonal-remix-strip';
+    scale.forEach(step=>{
+      const stepHex = hslToHex(step.h, step.s, step.l).toUpperCase();
+      const sw = document.createElement('div');
+      sw.className = 'tonal-remix-swatch';
+      sw.style.background = stepHex;
+      sw.title = stepHex+' — click to copy';
+      sw.addEventListener('click', ()=>{
+        navigator.clipboard.writeText(stepHex);
+        addRecentColor(stepHex);
+        sw.classList.add('chip-pulse');
+        setTimeout(()=>sw.classList.remove('chip-pulse'), 500);
+      });
+      strip.appendChild(sw);
+    });
+
+    row.appendChild(label);
+    row.appendChild(strip);
+    container.appendChild(row);
+  });
+}
+
 function rgbToLab(r,g,b){
   let [R,G,B] = [r,g,b].map(v=>{
     v/=255;
