@@ -27,7 +27,20 @@
 
 <script src="shared.js?v=42"></script>
 <script>
-paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55, 0);
+const homeWheelCanvas = document.getElementById('homeWheelCanvas');
+paintStaticWheel(homeWheelCanvas.getContext('2d'), 520, 55, 0);
+
+/* Ties the wheel's spin speed and vividness to the signup password
+   strength score (0-4, from passwordStrength() in shared.js) -- climbing
+   from Weak to Strong spins the wheel faster and boosts its saturation via
+   a CSS filter, rather than repainting the pixel data. Score 0 (empty/too
+   short) is the same as the wheel's normal resting state, so there's
+   nothing to reset to a "muted" look -- it only ever ramps upward. */
+function updateWheelEnergy(score){
+  const t = (score||0)/4;
+  homeWheelCanvas.style.animationDuration = (4 - 3.1*t).toFixed(2)+'s';
+  homeWheelCanvas.style.filter = t>0 ? 'saturate('+(100+60*t).toFixed(0)+'%)' : '';
+}
 
 /* Floating swatch particles: small chips in real colours pulled from the
    app's own named-colour list, drifting slowly behind everything else. */
@@ -187,6 +200,11 @@ function renderAuthForm(mode){
   const strengthMeter = attachPasswordStrengthMeter(passInput);
   strengthMeter.style.display = 'none';
 
+  passInput.addEventListener('input', ()=>{
+    if(mode!=='signup') return;
+    updateWheelEnergy(passwordStrength(passInput.value).score);
+  });
+
   fieldsWrap.appendChild(usernameRow);
   fieldsWrap.appendChild(passField);
   fieldsWrap.appendChild(strengthMeter);
@@ -221,6 +239,7 @@ function renderAuthForm(mode){
     confirmField.style.display = m==='signup' ? 'block' : 'none';
     strengthMeter.style.display = m==='signup' ? 'block' : 'none';
     errorEl.style.display = 'none';
+    updateWheelEnergy(m==='signup' ? passwordStrength(passInput.value).score : 0);
   }
   loginTab.addEventListener('click', ()=>setMode('login'));
   signupTab.addEventListener('click', ()=>setMode('signup'));
