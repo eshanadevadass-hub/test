@@ -926,10 +926,24 @@ function deleteLibrary(libraryId){
   return data;
 }
 
+/* No two palettes in the same library may share a name (case-insensitive).
+   savePaletteToLibrary is used both by editable "Save to library" forms and
+   by one-click actions (starter packs) with no name-entry step, so it
+   de-duplicates automatically -- "Autumn" becomes "Autumn (2)" -- rather
+   than failing outright. renamePaletteInLibrary is always a single explicit
+   user action (via a prompt), so it rejects a colliding name instead and
+   reports why, matching how account username collisions already behave. */
 function savePaletteToLibrary(libraryId, name, colors){
   const data = loadLibraryData();
   const lib = data.libraries.find(l=>l.id===libraryId) || data.libraries[0];
-  const palette = { id: genId('pal'), name: (name||'').trim() || 'Untitled palette', colors, createdAt: Date.now() };
+  let finalName = (name||'').trim() || 'Untitled palette';
+  const taken = new Set(lib.palettes.map(p=>p.name.toLowerCase()));
+  if(taken.has(finalName.toLowerCase())){
+    let n = 2;
+    while(taken.has((finalName+' ('+n+')').toLowerCase())) n++;
+    finalName = finalName+' ('+n+')';
+  }
+  const palette = { id: genId('pal'), name: finalName, colors, createdAt: Date.now() };
   lib.palettes.unshift(palette);
   saveLibraryData(data);
   return palette;
@@ -938,12 +952,16 @@ function savePaletteToLibrary(libraryId, name, colors){
 function renamePaletteInLibrary(libraryId, paletteId, newName){
   const data = loadLibraryData();
   const lib = data.libraries.find(l=>l.id===libraryId);
-  if(lib){
-    const pal = lib.palettes.find(p=>p.id===paletteId);
-    if(pal && newName && newName.trim()) pal.name = newName.trim();
-  }
+  if(!lib) return {ok:false, error:'Could not find that library.'};
+  const pal = lib.palettes.find(p=>p.id===paletteId);
+  if(!pal) return {ok:false, error:'Could not find that palette.'};
+  const trimmed = (newName||'').trim();
+  if(!trimmed) return {ok:false, error:'Enter a name.'};
+  const taken = lib.palettes.some(p=>p.id!==paletteId && p.name.toLowerCase()===trimmed.toLowerCase());
+  if(taken) return {ok:false, error:'A palette named "'+trimmed+'" already exists in this library.'};
+  pal.name = trimmed;
   saveLibraryData(data);
-  return data;
+  return {ok:true, data};
 }
 
 function deletePaletteFromLibrary(libraryId, paletteId){

@@ -93,7 +93,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=32"></script>
+<script src="shared.js?v=33"></script>
 <script>
 let currentLibraryId = null;
 
@@ -173,7 +173,11 @@ function renderLibraryContent(){
     renameBtn.addEventListener('click', ()=>{
       const newName = prompt('Rename this palette:', pal.name);
       if(newName && newName.trim()){
-        renamePaletteInLibrary(lib.id, pal.id, newName.trim());
+        const res = renamePaletteInLibrary(lib.id, pal.id, newName.trim());
+        if(!res.ok){
+          alert(res.error);
+          return;
+        }
         renderLibraryTabs();
         renderLibraryContent();
       }
