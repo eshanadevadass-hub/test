@@ -156,6 +156,10 @@ function backgroundPreviewSwatches(h, s, l){
     {label:'Cream', hex:'#F5F0E6'},
     {label:'Dark navy', hex:'#1A1F2E'},
     {label:'Complementary', hex: hslToHex((h+180)%360, Math.max(s,40), 50).toUpperCase()},
+    {label:'Analogous', hex: hslToHex((h+30)%360, Math.max(s,40), 50).toUpperCase()},
+    {label:'Triadic', hex: hslToHex((h+120)%360, Math.max(s,40), 50).toUpperCase()},
+    {label:'Tint of itself', hex: hslToHex(h, s, Math.min(l+35,92)).toUpperCase()},
+    {label:'Shade of itself', hex: hslToHex(h, s, Math.max(l-35,10)).toUpperCase()},
   ];
 }
 function renderBackgroundPreview(container, hex){
