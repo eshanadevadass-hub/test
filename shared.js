@@ -961,15 +961,39 @@ function usernameToHue(username){
   }
   return hash % 360;
 }
-function applyAvatarColor(el, username){
-  const hue = usernameToHue(username);
-  if(hue===null){
+/* account.avatarColor, when present, is a user-chosen hue (0-359) that
+   overrides the automatic username-derived one -- set via the "Avatar
+   colour" slider on profile.html. Kept as a hue rather than a free RGB
+   value so it stays under the same saturation/lightness formula as the
+   automatic colour, guaranteeing the initial letter is always readable. */
+function resolveAvatarHue(account){
+  if(account && typeof account.avatarColor==='number') return account.avatarColor;
+  return usernameToHue(account ? account.username : '');
+}
+function applyAvatarColor(el, hue){
+  if(hue===null || hue===undefined){
     el.style.background = '';
     el.style.color = '';
     return;
   }
   el.style.background = hslToHex(hue, 55, 38);
   el.style.color = '#f5f2ec';
+}
+function setAvatarColor(hue){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return;
+  account.avatarColor = ((hue%360)+360)%360;
+  saveAccountsData(data);
+  renderAccountBar();
+}
+function resetAvatarColor(){
+  const data = loadAccountsData();
+  const account = data.accounts.find(a=>a.id===data.activeAccountId);
+  if(!account) return;
+  delete account.avatarColor;
+  saveAccountsData(data);
+  renderAccountBar();
 }
 
 function renderAccountBar(){
@@ -990,7 +1014,7 @@ function renderAccountBar(){
     avatarBtn.appendChild(img);
   } else {
     avatarBtn.textContent = account.username.charAt(0).toUpperCase();
-    applyAvatarColor(avatarBtn, account.username);
+    applyAvatarColor(avatarBtn, resolveAvatarHue(account));
   }
   avatarBtn.addEventListener('click', ()=>{ location.href = 'profile.html'; });
 

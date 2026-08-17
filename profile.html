@@ -15,7 +15,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=40">
+<link rel="stylesheet" href="shared.css?v=41">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -62,6 +62,12 @@
       </div>
     </div>
 
+    <div class="slider-row" style="max-width:320px;margin-top:20px;">
+      <div class="slider-label"><span>Avatar colour</span><span id="avatarColorReadout"></span></div>
+      <input type="range" id="avatarColorSlider" class="hue-slider" min="0" max="359" value="0" step="1">
+    </div>
+    <button type="button" class="iconbtn" id="resetAvatarColorBtn" style="margin-top:10px;display:none;">Reset to automatic</button>
+
     <p class="section-title" style="margin-top:32px;">Username</p>
     <div class="hex-guess-row" style="max-width:320px;">
       <input type="text" id="usernameInput" class="hex-guess-input" autocomplete="username">
@@ -82,7 +88,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=40"></script>
+<script src="shared.js?v=41"></script>
 <script>
 const profileAvatarBtn = document.getElementById('profileAvatarBtn');
 const removeAvatarBtn = document.getElementById('removeAvatarBtn');
@@ -99,6 +105,9 @@ const passwordSuccess = document.getElementById('passwordSuccess');
 const savePasswordBtn = document.getElementById('savePasswordBtn');
 const guestBanner = document.getElementById('guestBanner');
 const passwordSectionTitle = document.getElementById('passwordSectionTitle');
+const avatarColorSlider = document.getElementById('avatarColorSlider');
+const avatarColorReadout = document.getElementById('avatarColorReadout');
+const resetAvatarColorBtn = document.getElementById('resetAvatarColorBtn');
 
 function renderProfilePhoto(){
   const account = getActiveAccount();
@@ -113,7 +122,7 @@ function renderProfilePhoto(){
     removeAvatarBtn.style.display = 'flex';
   } else {
     profileAvatarBtn.textContent = account.username.charAt(0).toUpperCase();
-    applyAvatarColor(profileAvatarBtn, account.username);
+    applyAvatarColor(profileAvatarBtn, resolveAvatarHue(account));
     removeAvatarBtn.style.display = 'none';
   }
 }
@@ -134,6 +143,27 @@ removeAvatarBtn.addEventListener('click', ()=>{
   removeAccountAvatar();
   renderProfilePhoto();
 });
+
+function refreshAvatarColorControl(){
+  const account = getActiveAccount();
+  const hue = resolveAvatarHue(account);
+  avatarColorSlider.value = hue===null ? 0 : hue;
+  avatarColorReadout.textContent = hue===null ? '' : hue+'°';
+  resetAvatarColorBtn.style.display = typeof account.avatarColor==='number' ? 'inline-flex' : 'none';
+}
+avatarColorSlider.addEventListener('input', ()=>{
+  const hue = parseInt(avatarColorSlider.value, 10);
+  setAvatarColor(hue);
+  avatarColorReadout.textContent = hue+'°';
+  resetAvatarColorBtn.style.display = 'inline-flex';
+  renderProfilePhoto();
+});
+resetAvatarColorBtn.addEventListener('click', ()=>{
+  resetAvatarColor();
+  refreshAvatarColorControl();
+  renderProfilePhoto();
+});
+refreshAvatarColorControl();
 
 const usernameConflictBanner = document.getElementById('usernameConflictBanner');
 function checkUsernameConflict(){
