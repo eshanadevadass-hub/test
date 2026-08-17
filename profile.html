@@ -16,6 +16,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile — Colouristic</title>
 <link rel="stylesheet" href="shared.css?v=22">
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -78,7 +81,7 @@
   </section>
 </div>
 
-<script src="shared.js?v=22"></script>
+<script src="shared.js?v=23"></script>
 <script>
 const profileAvatarBtn = document.getElementById('profileAvatarBtn');
 const removeAvatarBtn = document.getElementById('removeAvatarBtn');
@@ -134,10 +137,15 @@ function checkUsernameConflict(){
 }
 
 usernameInput.value = getActiveAccount().username;
-saveUsernameBtn.addEventListener('click', ()=>{
+saveUsernameBtn.addEventListener('click', async ()=>{
   usernameError.style.display = 'none';
   usernameSuccess.style.display = 'none';
-  const res = updateUsername(usernameInput.value);
+  const original = saveUsernameBtn.textContent;
+  saveUsernameBtn.disabled = true;
+  saveUsernameBtn.textContent = 'Checking...';
+  const res = await updateUsername(usernameInput.value);
+  saveUsernameBtn.disabled = false;
+  saveUsernameBtn.textContent = original;
   if(!res.ok){
     usernameError.textContent = res.error;
     usernameError.style.display = 'block';

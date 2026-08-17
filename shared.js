@@ -470,15 +470,19 @@ function genId(prefix){
 }
 
 /* ---- Local accounts ----
-   There's no server here, so this can't protect data or sync it across
-   devices -- it's a lightweight way for people sharing one browser to keep
-   separate libraries and game stats. Passwords are SHA-256 hashed before
-   storage so they're not sitting in localStorage as plain text, but that's
-   hygiene, not real security: anyone with access to this browser's storage
-   can still see everything. Signed-out ("Guest") data keeps using the
-   original, unnamespaced keys, so nothing already saved gets hidden by
-   adding this feature. ACCOUNTS_STORAGE_KEY itself is declared at the top
-   of this file, not here -- see the comment there. */
+   Everything about an account -- password, libraries, game stats -- lives
+   only in this browser's localStorage; there's no account server, so none
+   of that can sync across devices or be recovered if it's cleared. The one
+   exception is the username itself: see the "Global username uniqueness"
+   block further down, which optionally checks a shared Firestore registry
+   so two people on different devices can't end up with the same one.
+   Passwords are SHA-256 hashed before storage so they're not sitting in
+   localStorage as plain text, but that's hygiene, not real security:
+   anyone with access to this browser's storage can still see everything.
+   Signed-out ("Guest") data keeps using the original, unnamespaced keys,
+   so nothing already saved gets hidden by adding this feature.
+   ACCOUNTS_STORAGE_KEY itself is declared at the top of this file, not
+   here -- see the comment there. */
 
 function loadAccountsData(){
   try{
@@ -504,6 +508,52 @@ async function hashPassword(pw){
   const buf = await crypto.subtle.digest('SHA-256', enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+/* ---- Global username uniqueness (optional Firebase backend) ----
+   Everything else here is local-only by design, but a username only really
+   means "yours" if nobody else -- on any device -- can also be using it,
+   and that needs something outside localStorage to check against. This
+   talks to a small Firestore collection (just the username strings, as
+   document IDs, nothing else -- no passwords, no personal data) if
+   firebase-config.js has been filled in with a real project. If it hasn't,
+   sign-up/rename quietly fall back to the original per-device-only check
+   instead of breaking. Firestore security rules (see firebase-config.js's
+   comment / project setup notes) allow creating a username doc only if it
+   doesn't already exist, and never allow update/delete from the client --
+   so a claimed username is reserved permanently, even past a rename away
+   from it. That's a deliberate tradeoff: this app has no real server-side
+   auth, so allowing deletes would let anyone free up (and steal) someone
+   else's username. */
+function firebaseUsernamesReady(){
+  return typeof firebase !== 'undefined'
+    && !!window.FIREBASE_CONFIG
+    && !!window.FIREBASE_CONFIG.apiKey
+    && window.FIREBASE_CONFIG.apiKey.indexOf('PASTE_')!==0;
+}
+let _firebaseApp = null;
+function usernamesCollection(){
+  if(!_firebaseApp) _firebaseApp = firebase.initializeApp(window.FIREBASE_CONFIG);
+  return firebase.firestore().collection('usernames');
+}
+async function checkUsernameAvailableGlobally(username){
+  const doc = await usernamesCollection().doc(username.toLowerCase()).get();
+  return !doc.exists;
+}
+async function claimUsernameGlobally(username){
+  await usernamesCollection().doc(username.toLowerCase()).set({createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+}
+async function reserveUsernameGlobally(username){
+  if(!firebaseUsernamesReady()) return {ok:true};
+  try{
+    const available = await checkUsernameAvailableGlobally(username);
+    if(!available) return {ok:false, error:'That username is already taken.'};
+    await claimUsernameGlobally(username);
+    return {ok:true};
+  }catch(e){
+    if(e && e.code==='permission-denied') return {ok:false, error:'That username is already taken.'};
+    return {ok:false, error:"Couldn't verify that username right now -- check your connection and try again."};
+  }
+}
+
 async function signUp(username, password){
   username = (username||'').trim();
   if(!username) return {ok:false, error:'Enter a username.'};
@@ -512,6 +562,8 @@ async function signUp(username, password){
   if(data.accounts.some(a=>a.username.toLowerCase()===username.toLowerCase())){
     return {ok:false, error:'That username is already taken on this device.'};
   }
+  const reserved = await reserveUsernameGlobally(username);
+  if(!reserved.ok) return reserved;
   const account = {id:genId('acct'), username, passwordHash: await hashPassword(password), createdAt:Date.now()};
   data.accounts.push(account);
   data.activeAccountId = account.id;
@@ -535,7 +587,7 @@ function logOut(){
   saveAccountsData(data);
   notifyAccountChanged();
 }
-function updateUsername(newUsername){
+async function updateUsername(newUsername){
   newUsername = (newUsername||'').trim();
   if(!newUsername) return {ok:false, error:'Enter a username.'};
   const data = loadAccountsData();
@@ -543,6 +595,10 @@ function updateUsername(newUsername){
   if(!account) return {ok:false, error:'No active account.'};
   const taken = data.accounts.some(a=>a.id!==account.id && a.username.toLowerCase()===newUsername.toLowerCase());
   if(taken) return {ok:false, error:'That username is already taken on this device.'};
+  if(newUsername.toLowerCase()!==account.username.toLowerCase()){
+    const reserved = await reserveUsernameGlobally(newUsername);
+    if(!reserved.ok) return reserved;
+  }
   account.username = newUsername;
   saveAccountsData(data);
   notifyAccountChanged();

@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
 <link rel="stylesheet" href="shared.css?v=22">
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -22,7 +25,7 @@
 
 </div>
 
-<script src="shared.js?v=22"></script>
+<script src="shared.js?v=23"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55);
 
@@ -167,7 +170,7 @@ function renderAuthForm(mode){
 
   const note = document.createElement('p');
   note.className = 'auth-note';
-  note.textContent = "This runs entirely in your browser — there's no server, so this keeps profiles separate on this device only. It doesn't protect your data or sync it anywhere else.";
+  note.textContent = "Your password and everything you make stays local to this device — there's no account server. Usernames are checked against a shared registry so nobody else, on any device, can use the same one, but that's all that's shared.";
 
   function setMode(m){
     mode = m;
