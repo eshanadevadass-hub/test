@@ -141,6 +141,46 @@ const COLOR_NAMES = [
   {n:'Fuchsia',h:322,s:70,l:52}, {n:'Hot Pink',h:328,s:80,l:62}, {n:'Pink',h:335,s:65,l:70},
   {n:'Mauve',h:328,s:28,l:56}, {n:'Berry',h:335,s:55,l:36}
 ];
+
+/* Curated starter palette packs (library.html) -- ready-made themed
+   palettes people can drop straight into their own library instead of
+   building one from scratch. Specified as HSL, like COLOR_NAMES, so
+   they're generated from the same colour math as everything else. */
+const STARTER_PACKS = [
+  { id:'autumn', name:'Autumn', desc:'Warm oranges and deep, earthy tones.', colors:[
+    {h:20,s:65,l:45,label:'Burnt orange'}, {h:5,s:55,l:35,label:'Deep red'}, {h:45,s:60,l:45,label:'Mustard'},
+    {h:20,s:40,l:25,label:'Chestnut'}, {h:42,s:45,l:88,label:'Cream'}
+  ]},
+  { id:'pastel', name:'Pastel', desc:'Soft, muted tones with a gentle touch.', colors:[
+    {h:340,s:60,l:85,label:'Pastel pink'}, {h:265,s:50,l:85,label:'Lavender'}, {h:150,s:45,l:85,label:'Mint'},
+    {h:200,s:60,l:85,label:'Baby blue'}, {h:50,s:65,l:85,label:'Buttery yellow'}
+  ]},
+  { id:'cyberpunk', name:'Cyberpunk', desc:'High-contrast neon against near-black.', colors:[
+    {h:330,s:90,l:55,label:'Hot pink'}, {h:195,s:100,l:55,label:'Electric blue'}, {h:130,s:90,l:50,label:'Neon green'},
+    {h:280,s:70,l:30,label:'Deep purple'}, {h:260,s:30,l:8,label:'Near-black'}
+  ]},
+  { id:'ocean', name:'Ocean', desc:'Deep blues and teals with a sandy shore.', colors:[
+    {h:220,s:55,l:20,label:'Deep navy'}, {h:185,s:60,l:38,label:'Teal'}, {h:160,s:40,l:70,label:'Seafoam'},
+    {h:38,s:35,l:78,label:'Sandy beige'}, {h:8,s:70,l:65,label:'Coral'}
+  ]},
+  { id:'desert', name:'Desert', desc:'Sun-baked terracotta and dusty neutrals.', colors:[
+    {h:14,s:55,l:48,label:'Terracotta'}, {h:35,s:35,l:70,label:'Sand'}, {h:350,s:30,l:65,label:'Dusty rose'},
+    {h:95,s:20,l:55,label:'Sage'}, {h:200,s:30,l:70,label:'Sun-bleached blue'}
+  ]},
+  { id:'forest', name:'Forest', desc:'Deep greens and earthy woodland browns.', colors:[
+    {h:145,s:45,l:22,label:'Forest green'}, {h:85,s:30,l:38,label:'Moss'}, {h:25,s:35,l:22,label:'Bark'},
+    {h:30,s:15,l:70,label:'Mushroom'}, {h:180,s:15,l:80,label:'Morning mist'}
+  ]},
+  { id:'sunset', name:'Sunset', desc:'Warm gold and orange fading into dusk purple.', colors:[
+    {h:265,s:45,l:25,label:'Dusk purple'}, {h:320,s:60,l:45,label:'Magenta'}, {h:25,s:80,l:55,label:'Orange'},
+    {h:42,s:75,l:55,label:'Gold'}, {h:15,s:65,l:82,label:'Pale pink'}
+  ]},
+  { id:'monochrome', name:'Monochrome', desc:'A warm-neutral grayscale, five tones deep.', colors:[
+    {h:30,s:5,l:10,label:'Near-black'}, {h:30,s:5,l:28,label:'Charcoal'}, {h:30,s:5,l:48,label:'Mid grey'},
+    {h:30,s:5,l:72,label:'Light grey'}, {h:30,s:8,l:94,label:'Off-white'}
+  ]},
+];
+
 let _colorNamesLab = null;
 function nearestColorName(hex){
   if(!_colorNamesLab){

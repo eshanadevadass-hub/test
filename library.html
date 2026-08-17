@@ -20,7 +20,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Library — Colouristic</title>
-<link rel="stylesheet" href="shared.css?v=24">
+<link rel="stylesheet" href="shared.css?v=25">
 </head>
 <body>
 <div class="wrap">
@@ -85,9 +85,15 @@
 
     <div id="libraryContent" style="margin-top:24px;"></div>
   </div>
+
+  <div class="panel panel-library" style="margin-top:24px;">
+    <p class="section-title">Starter packs</p>
+    <p class="hint" style="margin-top:0;">Curated palettes to drop straight into your library — tweak them after, or use them as-is.</p>
+    <div class="starter-packs-grid" id="starterPacksGrid"></div>
+  </div>
 </div>
 
-<script src="shared.js?v=23"></script>
+<script src="shared.js?v=25"></script>
 <script>
 let currentLibraryId = null;
 
@@ -268,6 +274,55 @@ document.getElementById('deleteLibraryBtn').addEventListener('click', ()=>{
   }
 });
 
+function renderStarterPacks(){
+  const grid = document.getElementById('starterPacksGrid');
+  grid.innerHTML = '';
+  STARTER_PACKS.forEach(pack=>{
+    const colors = pack.colors.map(c=>({hex: hslToHex(c.h,c.s,c.l).toUpperCase(), label: c.label}));
+
+    const card = document.createElement('div');
+    card.className = 'starter-pack-card';
+
+    const name = document.createElement('p');
+    name.className = 'starter-pack-name';
+    name.textContent = pack.name;
+
+    const desc = document.createElement('p');
+    desc.className = 'starter-pack-desc';
+    desc.textContent = pack.desc;
+
+    const swatches = document.createElement('div');
+    swatches.className = 'starter-pack-swatches';
+    colors.forEach(c=>{
+      const sw = document.createElement('div');
+      sw.style.background = c.hex;
+      sw.title = c.label+' — '+c.hex;
+      swatches.appendChild(sw);
+    });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'iconbtn';
+    addBtn.type = 'button';
+    addBtn.textContent = 'Add to library';
+    addBtn.addEventListener('click', ()=>{
+      const data = loadLibraryData();
+      ensureCurrentLibrary(data);
+      savePaletteToLibrary(currentLibraryId, pack.name, colors);
+      const original = addBtn.textContent;
+      addBtn.textContent = 'Added!';
+      setTimeout(()=>{ addBtn.textContent = original; }, 1200);
+      renderLibraryTabs();
+      renderLibraryContent();
+    });
+
+    card.appendChild(name);
+    card.appendChild(desc);
+    card.appendChild(swatches);
+    card.appendChild(addBtn);
+    grid.appendChild(card);
+  });
+}
+
 window.addEventListener('colouristic:accountchanged', ()=>{
   currentLibraryId = null;
   renderLibraryTabs();
@@ -276,6 +331,7 @@ window.addEventListener('colouristic:accountchanged', ()=>{
 
 renderLibraryTabs();
 renderLibraryContent();
+renderStarterPacks();
 </script>
 </body>
 </html>

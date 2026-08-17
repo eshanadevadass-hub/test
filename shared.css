@@ -187,6 +187,21 @@ header p{
 .library-palette-card{border-top-color:var(--sky);margin-bottom:16px;padding:20px;}
 .save-to-library-form{display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
 
+.starter-packs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:18px;}
+.starter-pack-card{
+  background:var(--surface-2);
+  border:0.5px solid var(--line);
+  border-radius:12px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.starter-pack-name{font-family:'Fraunces',serif;font-size:16px;font-weight:500;margin:0;color:var(--text);}
+.starter-pack-desc{font-size:12.5px;color:var(--text-dim);margin:0;line-height:1.5;flex:1;}
+.starter-pack-swatches{display:flex;border-radius:8px;overflow:hidden;height:36px;border:0.5px solid var(--line-strong);}
+.starter-pack-swatches div{flex:1;}
+
 .wheel-stage{display:flex;flex-direction:column;align-items:center;gap:22px;}
 #wheelCanvas,#miniWheelCanvas{
   cursor:crosshair;
