@@ -203,6 +203,10 @@ const STARTER_PACKS = [
     {h:250,s:55,l:18,label:'Deep indigo'}, {h:270,s:55,l:40,label:'Violet'}, {h:240,s:20,l:92,label:'Starlight'},
     {h:320,s:55,l:55,label:'Nebula pink'}, {h:225,s:60,l:35,label:'Cosmic blue'}
   ]},
+  { id:'coffee', name:'Coffee', desc:'Cozy espresso, caramel, and warm milk.', colors:[
+    {h:20,s:45,l:15,label:'Espresso'}, {h:22,s:40,l:32,label:'Coffee'}, {h:32,s:55,l:50,label:'Caramel'},
+    {h:35,s:35,l:75,label:'Latte'}, {h:38,s:30,l:92,label:'Milk foam'}
+  ]},
 ];
 
 let _colorNamesLab = null;
