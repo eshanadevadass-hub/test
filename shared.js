@@ -358,8 +358,8 @@ function suggestPaletteName(colors){
 }
 
 // Wheels next to a lightness control must re-call this with the current lightness on every change, not just on init.
-function paintStaticWheel(targetCtx, targetSize, lightness=55){
-  const c = targetSize/2, rad = c-4;
+function paintStaticWheel(targetCtx, targetSize, lightness=55, inset=4){
+  const c = targetSize/2, rad = c-inset;
   const imgData = targetCtx.createImageData(targetSize,targetSize);
   for(let y=0;y<targetSize;y++){
     for(let x=0;x<targetSize;x++){
