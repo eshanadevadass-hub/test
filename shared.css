@@ -804,12 +804,13 @@ label.iconbtn{display:inline-flex;}
   max-width:1040px;
   margin:0 auto;
   padding:60px 0;
+  overflow:hidden;
 }
 .home-wheel-canvas{
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:400px;height:400px;
+  width:400px;height:auto;
   max-width:min(85vw, 400px);
   aspect-ratio:1/1;
   border-radius:50%;
