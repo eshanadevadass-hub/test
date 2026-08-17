@@ -485,7 +485,7 @@ function initLightingControl(){
 }
 
 const TEXTURE_STORAGE_KEY = 'colouristic.texturePreview.v1';
-const TEXTURE_CLASSES = ['texture-fur','texture-cotton','texture-satin','texture-paint','texture-denim','texture-corduroy'];
+const TEXTURE_CLASSES = ['texture-fur','texture-cotton','texture-satin','texture-paint','texture-denim','texture-corduroy','texture-velvet'];
 
 function applyTextureMode(mode){
   document.documentElement.classList.remove(...TEXTURE_CLASSES);
