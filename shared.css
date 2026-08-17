@@ -918,6 +918,22 @@ label.iconbtn{display:inline-flex;}
 .tonal-remix-swatch:hover{transform:scaleY(1.15);}
 .tonal-remix-swatch.chip-pulse{animation:recent-chip-pulse .5s ease;}
 
+/* ---- background context preview (shared.js: renderBackgroundPreview) ---- */
+.bg-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:14px;}
+.bg-preview-tile{
+  border-radius:12px;
+  border:0.5px solid var(--line-strong);
+  padding:20px 14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:96px;
+}
+.bg-preview-text{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;}
+.bg-preview-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.06em;}
+
 /* ---- gradient-generator.html ---- */
 .gradient-preview{
   width:100%;

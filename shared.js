@@ -141,6 +141,52 @@ function renderTonalRemix(container, colors){
   });
 }
 
+/* ---- Background context preview ----
+   The same colour reads completely differently depending on what surrounds
+   it (simultaneous contrast) -- this shows one colour sitting on a curated
+   spread of common real backgrounds (paper white, dark-mode navy, pure
+   black/white, greys) plus its own complementary hue, so you can sanity-
+   check "does this still work" rather than judging it floating alone on
+   the app's own dark background. */
+function backgroundPreviewSwatches(h, s, l){
+  return [
+    {label:'White', hex:'#FFFFFF'},
+    {label:'Black', hex:'#000000'},
+    {label:'Light grey', hex:'#E8E8E8'},
+    {label:'Dark grey', hex:'#2A2A2A'},
+    {label:'Cream', hex:'#F5F0E6'},
+    {label:'Dark navy', hex:'#1A1F2E'},
+    {label:'Complementary', hex: hslToHex((h+180)%360, Math.max(s,40), 50).toUpperCase()},
+  ];
+}
+function renderBackgroundPreview(container, hex){
+  container.innerHTML = '';
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const hsl = rgbToHsl(r,g,b);
+  backgroundPreviewSwatches(hsl.h, hsl.s, hsl.l).forEach(bg=>{
+    const br = parseInt(bg.hex.slice(1,3),16), bgg = parseInt(bg.hex.slice(3,5),16), bb = parseInt(bg.hex.slice(5,7),16);
+    const bgIsLight = relLuminance(br,bgg,bb) > 0.4;
+
+    const tile = document.createElement('div');
+    tile.className = 'bg-preview-tile';
+    tile.style.background = bg.hex;
+
+    const text = document.createElement('span');
+    text.className = 'bg-preview-text';
+    text.style.color = hex;
+    text.textContent = hex.toUpperCase();
+
+    const label = document.createElement('span');
+    label.className = 'bg-preview-label';
+    label.style.color = bgIsLight ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.6)';
+    label.textContent = bg.label;
+
+    tile.appendChild(text);
+    tile.appendChild(label);
+    container.appendChild(tile);
+  });
+}
+
 function rgbToLab(r,g,b){
   let [R,G,B] = [r,g,b].map(v=>{
     v/=255;

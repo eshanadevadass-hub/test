@@ -23,7 +23,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour wheel &amp; palette generator</title>
-<link rel="stylesheet" href="shared.css?v=28">
+<link rel="stylesheet" href="shared.css?v=29">
 </head>
 <body>
 <div class="wrap">
@@ -177,6 +177,12 @@
       </div>
     </div>
 
+    <div class="contrast-check">
+      <p class="section-title" style="margin-bottom:10px;">On different backgrounds</p>
+      <p class="hint" style="margin-top:0;margin-bottom:0;">The same colour reads differently depending on what's around it — here's this one against a spread of common backgrounds.</p>
+      <div class="bg-preview-grid" id="backgroundPreviewGrid"></div>
+    </div>
+
     <div class="hint">Drag anywhere on the wheel — angle sets hue, distance from centre sets saturation. Focus the wheel and use arrow keys to nudge (hold Shift for bigger steps).</div>
 
     <div class="actions" style="width:100%;">
@@ -188,7 +194,7 @@
   </div>
 </div>
 
-<script src="shared.js?v=28"></script>
+<script src="shared.js?v=29"></script>
 <script>
 const canvas = document.getElementById('wheelCanvas');
 const ctx = canvas.getContext('2d');
@@ -251,6 +257,8 @@ function updateContrastReadout(){
   const blackBadge = document.getElementById('contrastBlackBadge');
   blackBadge.textContent = bl.label;
   blackBadge.className = 'contrast-badge'+(bl.pass?' pass':' fail');
+
+  renderBackgroundPreview(document.getElementById('backgroundPreviewGrid'), hslToHex(base.h, base.s, base.l));
 }
 
 const STATE_STORAGE_KEY = 'colouristic.wheelState.v1';
