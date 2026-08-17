@@ -697,6 +697,30 @@ async function hashPassword(pw){
   const buf = await crypto.subtle.digest('SHA-256', enc);
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+
+const EYE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12C2 12 6 5 12 5C18 5 22 12 22 12C22 12 18 19 12 19C6 19 2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12C2 12 6 5 12 5C18 5 22 12 22 12C22 12 18 19 12 19C6 19 2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><line x1="3" y1="3" x2="21" y2="21"/></svg>';
+function wrapWithPasswordToggle(input){
+  const wrap = document.createElement('div');
+  wrap.className = 'password-field';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'password-toggle-btn';
+  btn.title = 'Show password';
+  btn.setAttribute('aria-label', 'Show password');
+  btn.innerHTML = EYE_ICON;
+  btn.addEventListener('click', ()=>{
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.innerHTML = showing ? EYE_ICON : EYE_OFF_ICON;
+    const label = showing ? 'Show password' : 'Hide password';
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+  });
+  wrap.appendChild(input);
+  wrap.appendChild(btn);
+  return wrap;
+}
 /* ---- Global username uniqueness (optional Firebase backend) ----
    Everything else here is local-only by design, but a username only really
    means "yours" if nobody else -- on any device -- can also be using it,

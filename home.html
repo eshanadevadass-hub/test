@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=36">
+<link rel="stylesheet" href="shared.css?v=37">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -25,7 +25,7 @@
 
 </div>
 
-<script src="shared.js?v=36"></script>
+<script src="shared.js?v=37"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55, 0);
 
@@ -156,9 +156,12 @@ function renderAuthForm(mode){
   confirmInput.type = 'password'; confirmInput.className = 'hex-guess-input';
   confirmInput.placeholder = 'Confirm password'; confirmInput.autocomplete = 'new-password';
 
+  const passField = wrapWithPasswordToggle(passInput);
+  const confirmField = wrapWithPasswordToggle(confirmInput);
+
   fieldsWrap.appendChild(userInput);
-  fieldsWrap.appendChild(passInput);
-  fieldsWrap.appendChild(confirmInput);
+  fieldsWrap.appendChild(passField);
+  fieldsWrap.appendChild(confirmField);
 
   const errorEl = document.createElement('p');
   errorEl.className = 'auth-error';
@@ -177,7 +180,7 @@ function renderAuthForm(mode){
     loginTab.classList.toggle('active', m==='login');
     signupTab.classList.toggle('active', m==='signup');
     submitBtn.textContent = m==='login' ? 'Log in' : 'Create account';
-    confirmInput.style.display = m==='signup' ? 'block' : 'none';
+    confirmField.style.display = m==='signup' ? 'block' : 'none';
     errorEl.style.display = 'none';
   }
   loginTab.addEventListener('click', ()=>setMode('login'));
