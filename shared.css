@@ -663,9 +663,7 @@ label.iconbtn{display:inline-flex;}
 .game-score-note{font-size:13px;color:var(--text-dim);margin:6px 0 0;line-height:1.5;}
 
 .account-bar{
-  position:fixed;
-  top:16px;right:20px;
-  z-index:60;
+  margin:0 0 20px auto;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   max-width:min(280px, calc(100vw - 40px));
   background:rgba(21,20,27,0.88);
