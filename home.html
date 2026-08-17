@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=13">
+<link rel="stylesheet" href="shared.css?v=14">
 </head>
 <body>
 <div class="wrap">
@@ -22,7 +22,7 @@
 
 </div>
 
-<script src="shared.js?v=13"></script>
+<script src="shared.js?v=14"></script>
 <script>
 paintStaticWheel(document.getElementById('homeWheelCanvas').getContext('2d'), 520, 55);
 
@@ -200,28 +200,11 @@ function renderAuthForm(mode){
   passInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
   confirmInput.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
 
-  const importLabel = document.createElement('label');
-  importLabel.className = 'iconbtn';
-  importLabel.style.cssText = 'width:100%;justify-content:center;margin-top:8px;';
-  importLabel.textContent = 'Restore from a backup file';
-  const importInput = document.createElement('input');
-  importInput.type = 'file'; importInput.accept = 'application/json,.json'; importInput.hidden = true;
-  importInput.addEventListener('change', ()=>{
-    const file = importInput.files[0];
-    importInput.value = '';
-    if(!file) return;
-    importAccountData(file).then(()=>{
-      location.href = nextDestination();
-    }).catch(err=>{ errorEl.textContent = err.message; errorEl.style.display = 'block'; });
-  });
-  importLabel.appendChild(importInput);
-
   authCard.appendChild(tabs);
   authCard.appendChild(fieldsWrap);
   authCard.appendChild(errorEl);
   authCard.appendChild(submitBtn);
   authCard.appendChild(note);
-  authCard.appendChild(importLabel);
 
   setMode(mode);
   userInput.focus();
