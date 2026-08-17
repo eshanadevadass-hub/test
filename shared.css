@@ -935,21 +935,34 @@ label.iconbtn{display:inline-flex;}
   margin:0 auto;
   padding:60px 0;
   overflow:hidden;
+  perspective:900px;
 }
-.home-wheel-canvas{
+/* Tilt (rotateX/rotateY, mouse-driven) lives on this wrapper, kept
+   separate from the canvas's own continuous spin -- both effects animate
+   "transform", and a CSS keyframe animation on an element always wins over
+   an inline style on that SAME element, so the two can't share one node
+   without one silently overriding the other every frame. */
+.home-wheel-tilt{
   position:absolute;
   top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:400px;height:auto;
+  width:400px;height:400px;
   max-width:min(85vw, 400px);
   aspect-ratio:1/1;
-  border-radius:50%;
-  box-shadow:0 0 110px -8px var(--live-color);
-  animation:home-wheel-spin 4s linear infinite;
+  transform:translate(-50%,-50%);
+  transition:transform 0.2s ease-out;
   z-index:1;
   pointer-events:none;
 }
-@keyframes home-wheel-spin{from{transform:translate(-50%,-50%) rotate(0deg);}to{transform:translate(-50%,-50%) rotate(360deg);}}
+.home-wheel-canvas{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  border-radius:50%;
+  box-shadow:0 0 110px -8px var(--live-color);
+  animation:home-wheel-spin 4s linear infinite;
+  pointer-events:none;
+}
+@keyframes home-wheel-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
 
 .auth-card{
   position:relative;

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Colouristic — colour theory, made tactile</title>
-<link rel="stylesheet" href="shared.css?v=42">
+<link rel="stylesheet" href="shared.css?v=43">
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
@@ -19,13 +19,15 @@
   </header>
 
   <div class="home-stage">
-    <canvas id="homeWheelCanvas" width="520" height="520" class="home-wheel-canvas"></canvas>
+    <div class="home-wheel-tilt" id="homeWheelTilt">
+      <canvas id="homeWheelCanvas" width="520" height="520" class="home-wheel-canvas"></canvas>
+    </div>
     <div class="auth-card" id="authCard"></div>
   </div>
 
 </div>
 
-<script src="shared.js?v=42"></script>
+<script src="shared.js?v=43"></script>
 <script>
 const homeWheelCanvas = document.getElementById('homeWheelCanvas');
 paintStaticWheel(homeWheelCanvas.getContext('2d'), 520, 55, 0);
@@ -109,6 +111,32 @@ function updateWheelEnergy(score){
       trailLayer.appendChild(dot);
     }
   });
+})();
+
+/* 3D tilt: the wheel leans away from the cursor's position on the page
+   (rotateX/rotateY on the .home-wheel-tilt wrapper, independent of the
+   canvas's own spin -- see the CSS comment on .home-wheel-tilt for why
+   they can't share one element). Normalised against the whole viewport
+   rather than the wheel's own small bounding box, so the tilt eases in
+   smoothly across the page instead of snapping to full tilt the moment
+   the cursor gets anywhere near it. */
+(function(){
+  const tilt = document.getElementById('homeWheelTilt');
+  const MAX_TILT = 10;
+  let raf = null, tx = 0, ty = 0;
+
+  function apply(){
+    tilt.style.transform = 'translate(-50%,-50%) rotateX('+(-ty*MAX_TILT).toFixed(2)+'deg) rotateY('+(tx*MAX_TILT).toFixed(2)+'deg)';
+    raf = null;
+  }
+  function schedule(){ if(!raf) raf = requestAnimationFrame(apply); }
+
+  document.addEventListener('mousemove', e=>{
+    tx = Math.max(-1, Math.min(1, (e.clientX - window.innerWidth/2) / (window.innerWidth/2)));
+    ty = Math.max(-1, Math.min(1, (e.clientY - window.innerHeight/2) / (window.innerHeight/2)));
+    schedule();
+  });
+  document.addEventListener('mouseleave', ()=>{ tx = 0; ty = 0; schedule(); });
 })();
 
 function nextDestination(){
